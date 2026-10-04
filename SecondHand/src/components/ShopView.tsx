@@ -28,8 +28,8 @@ export default function ShopView({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
 
-  const categories = ['All', 'Skirts', 'Tops', 'Dresses'];
-  const sizes = ['S', 'M'];
+  const categories = ['All', 'Skirts', 'Tops', 'Dresses', 'Men'];
+  const sizes = ['XS', 'S', 'M', '30', '32', '34'];
   const conditions = ['Pristine', 'Excellent', 'Very Good'];
 
   // Toggle helpers
@@ -60,14 +60,15 @@ export default function ShopView({
     return products.filter((product) => {
       // Category Match
       if (selectedCategory !== 'All') {
+        const normalizedCategory = selectedCategory.toLowerCase() === 'men' ? 'mens' : selectedCategory.toLowerCase();
         const matchesCategory =
-          product.category.toLowerCase() === selectedCategory.toLowerCase() ||
+          product.category.toLowerCase() === normalizedCategory ||
           product.subcategory.toLowerCase() === selectedCategory.toLowerCase();
         if (!matchesCategory) return false;
       }
 
       // Size Match
-      if (selectedSizes.length > 0 && !selectedSizes.includes(product.size)) {
+      if (selectedSizes.length > 0 && !selectedSizes.includes(product.filterSize || product.size)) {
         return false;
       }
 
@@ -342,7 +343,7 @@ export default function ShopView({
                           )}
                         </div>
                       </div>
-                      <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-luxury-gray">Shipping included</p>
+                      <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-luxury-gray">Shipping extra · Free over ₹900</p>
                     </div>
                   </motion.div>
                 ))}

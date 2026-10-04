@@ -11,6 +11,7 @@ export interface Product {
   subcategory: string;
   size: 'XS' | 'S' | 'M' | 'L' | 'XL';
   sizeLabel?: string;
+  filterSize?: string;
   condition: 'Pristine' | 'Excellent' | 'Very Good';
   conditionConfirmed?: boolean;
   material: string;

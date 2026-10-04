@@ -110,6 +110,7 @@ export default function ProductDetailView({
                 ))}
               </div>
             )}
+            <p className="text-xs leading-5 text-luxury-gray">Want more angles of this item? <a href={`https://wa.me/917338546697?text=${encodeURIComponent(`Hi, could you send me more photos of the ${product.title}?`)}`} target="_blank" rel="noreferrer" className="font-medium text-luxury-charcoal underline underline-offset-4">Text us on WhatsApp for more pics.</a></p>
           </div>
 
           {/* RIGHT Sidebar - Commercial Specs panel */}
@@ -133,7 +134,7 @@ export default function ProductDetailView({
                 <span className="font-mono text-xl font-semibold text-luxury-charcoal">{product.price > 0 ? formatINR(product.price) : 'Price to be added'}</span>
               )}
             </div>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-luxury-gray">Shipping included in the price</p>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-luxury-gray">Shipping charged separately · Free on orders over ₹900</p>
 
             {/* Specs Tags Badges */}
             <div className="flex flex-wrap gap-2 py-6 border-b border-luxury-border">
@@ -143,9 +144,7 @@ export default function ProductDetailView({
               {product.conditionConfirmed !== false && <span id="badge-condition" className="font-mono text-[10px] tracking-widest text-[#1C1C1C] border border-[#1C1C1C] bg-[#FBFBFA] px-3 py-1.5 uppercase font-medium">
                 Condition: {product.condition}
               </span>}
-              <span id="badge-material" className="font-mono text-[10px] tracking-widest text-[#1C1C1C] border border-[#1C1C1C] bg-[#FBFBFA] px-3 py-1.5 uppercase font-medium">
-                Material: {product.material}
-              </span>
+              {product.material !== 'Add fabric details' && <span id="badge-material" className="font-mono text-[10px] tracking-widest text-[#1C1C1C] border border-[#1C1C1C] bg-[#FBFBFA] px-3 py-1.5 uppercase font-medium">Material: {product.material}</span>}
             </div>
 
             {/* Main description description block */}

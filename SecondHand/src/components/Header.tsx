@@ -28,7 +28,7 @@ export default function Header({ currentView, setView, onSearch }: HeaderProps) 
         <div className="grid min-h-20 grid-cols-3 items-center py-3">
           <div className="flex items-center">
             <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 md:hidden" aria-label="Open menu"><Menu className="h-5 w-5"/></button>
-            <span className="hidden font-mono text-[9px] uppercase tracking-[0.2em] text-luxury-gray md:block">Pre-loved · sizes S–M</span>
+            <span className="hidden font-mono text-[9px] uppercase tracking-[0.2em] text-luxury-gray md:block">Pre-loved · free shipping over ₹900</span>
           </div>
           <button onClick={() => setView('home')} className="flex flex-col items-center gap-1.5 text-center">
             <span className="font-serif text-2xl font-semibold tracking-[0.15em] md:text-3xl">GOSH</span>

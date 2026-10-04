@@ -16,7 +16,11 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col bg-luxury-sand text-luxury-charcoal selection:bg-luxury-charcoal selection:text-white">
-      <div className="bg-[#57443b] px-4 py-2 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-white">Shipping included on every item</div>
+      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 bg-[#57443b] px-4 py-2 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white">
+        <span>Shipping charged separately · Free shipping on orders over ₹900</span>
+        <span aria-hidden="true">·</span>
+        <a href="https://wa.me/917338546697" target="_blank" rel="noreferrer" className="underline underline-offset-2">WhatsApp 7338546697</a>
+      </div>
       <Header currentView={currentView} setView={setView} onSearch={setSearchQuery} />
       <main className="flex-grow">
         <AnimatePresence mode="wait">
