@@ -1,0 +1,6 @@
+{
+  "name": "GOSH",
+  "description": "A personal thrift shop for pre-loved skirts, tops and dresses in sizes S and M.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
