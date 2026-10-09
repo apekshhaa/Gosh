@@ -19,6 +19,7 @@ export interface Product {
   measurements: string;
   shipping: string;
   isCompletedArchive?: boolean;
+  isSoldOut?: boolean;
 }
 
 export interface CartItem {

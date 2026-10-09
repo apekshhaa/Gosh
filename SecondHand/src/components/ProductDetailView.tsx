@@ -89,7 +89,7 @@ export default function ProductDetailView({
 
               {/* Status Tag Overlay */}
               <div className="absolute top-4 left-4 bg-luxury-charcoal text-white font-mono text-[9px] tracking-widest px-2.5 py-1 uppercase font-medium">
-                Sourced Archive
+                {product.isSoldOut ? 'Sold Out' : 'Sourced Archive'}
               </div>
             </div>
 

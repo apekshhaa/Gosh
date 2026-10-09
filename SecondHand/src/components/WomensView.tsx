@@ -32,7 +32,7 @@ export default function WomensView({
   ];
 
   const subcategoriesMap: Record<string, string[]> = {
-    women: ['All Women', 'Dresses', 'Tops & Blouses', 'Outerwear', 'Knitwear', 'Trousers'],
+    women: ['All Women', 'Dresses', 'Tops & Blouses', 'Jeans', 'Outerwear', 'Knitwear', 'Trousers'],
     men: ['All Men', 'Suits & Blazers', 'Shirts', 'Outerwear', 'Knitwear', 'Trousers', 'Footwear'],
     children: ['All Children', 'Outerwear', 'Knitwear'],
     accessories: ['All Accessories', 'Bags', 'Footwear', 'Scarves']

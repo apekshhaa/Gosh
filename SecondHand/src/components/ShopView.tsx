@@ -28,7 +28,7 @@ export default function ShopView({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
 
-  const categories = ['All', 'Skirts', 'Tops', 'Dresses', 'Men'];
+  const categories = ['All', 'Skirts', 'Tops', 'Dresses', 'Jeans', 'Men'];
   const sizes = ['XS', 'S', 'M', '30', '32', '34'];
   const conditions = ['Pristine', 'Excellent', 'Very Good'];
 
@@ -308,6 +308,11 @@ export default function ShopView({
                       {product.discount && (
                         <div className="absolute top-4 left-4 bg-red-600 text-[10px] font-semibold tracking-wider text-white font-mono px-2 py-1">
                           {product.discount}
+                        </div>
+                      )}
+                      {product.isSoldOut && (
+                        <div className="absolute inset-x-0 bottom-0 bg-black/75 py-3 text-center font-mono text-xs font-semibold tracking-[0.2em] text-white">
+                          SOLD OUT
                         </div>
                       )}
                     </div>
