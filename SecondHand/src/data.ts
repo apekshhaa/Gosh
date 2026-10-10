@@ -293,49 +293,49 @@ export const products: Product[] = [
     measurements: 'Size M.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu-floral-dress', title: 'Floral Sundress', brand: 'GOSH finds', price: 400,
+    id: 'jaanu-floral-dress', title: 'Floral Sundress', brand: 'GOSH finds', price: 350, isSoldOut: true,
     image: jaanuDressImage, images: [jaanuDressImage, jaanuDressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A sleeveless sundress with a mint, yellow and white floral print and a gathered bodice.',
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu2-floral-dress', title: 'White Floral Dress', brand: 'GOSH finds', price: 450,
+    id: 'jaanu2-floral-dress', title: 'White Floral Dress', brand: 'GOSH finds', price: 350, isSoldOut: true,
     image: jaanu2DressImage, images: [jaanu2DressImage, jaanu2DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A white mini dress with a small floral print, puff sleeves and a softly gathered neckline.',
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu3-brown-polo-dress', title: 'Brown Polo Dress', brand: 'GOSH finds', price: 300,
+    id: 'jaanu3-brown-polo-dress', title: 'Brown Polo Dress', brand: 'GOSH finds', price: 300, isSoldOut: true,
     image: jaanu3DressImage, images: [jaanu3DressImage],
     category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A brown short-sleeved polo dress with cream chest stripes and a button placket.',
     measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu4-floral-slip-dress', title: 'Floral Slip Dress', brand: 'GOSH finds', price: 400,
+    id: 'jaanu4-floral-slip-dress', title: 'Floral Slip Dress', brand: 'GOSH finds', price: 300, isSoldOut: true,
     image: jaanu4DressImage, images: [jaanu4DressImage, jaanu4DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A dark plum floral slip dress with lace trim, adjustable straps and an asymmetrical layered hem.',
     measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu5-pink-floral-maxi-dress', title: 'Pink Floral Maxi Dress', brand: 'GOSH finds', price: 500,
+    id: 'jaanu5-pink-floral-maxi-dress', title: 'Pink Floral Maxi Dress', brand: 'GOSH finds', price: 350, isSoldOut: true,
     image: jaanu5DressImage, images: [jaanu5DressImage, jaanu5DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A pink floral maxi dress with a draped neckline, tie-up shoulder straps and a softly ruched waist.',
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu6-striped-shirt-dress', title: 'Striped Shirt Dress', brand: 'GOSH finds', price: 350,
+    id: 'jaanu6-striped-shirt-dress', title: 'Striped Shirt Dress', brand: 'GOSH finds', price: 400,
     image: jaanu6DressImage, images: [jaanu6DressImage, jaanu6DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A black-and-white vertically striped shirt dress with three-quarter sleeves, buttons and a tie waist.',
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu7-lilac-floral-dress', title: 'Lilac Floral Dress', brand: 'GOSH finds', price: 450,
+    id: 'jaanu7-lilac-floral-dress', title: 'Lilac Floral Dress', brand: 'GOSH finds', price: 350, isSoldOut: true,
     image: jaanu7DressImage, images: [jaanu7DressImage, jaanu7DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A lilac floral-print dress with puff sleeves, a front tie and a ruffled hem.',
