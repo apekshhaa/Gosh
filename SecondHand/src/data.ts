@@ -51,6 +51,19 @@ const knotTopImage = new URL('../assets/images/knot.png', import.meta.url).href;
 const knotTopDescriptionImage = new URL('../assets/images/knot_desc.png', import.meta.url).href;
 const blackTieTopImage = new URL('../assets/images/blackk.png', import.meta.url).href;
 const blackTieTopDescriptionImage = new URL('../assets/images/blackk_desc.png', import.meta.url).href;
+const jaanuDressImage = new URL('../assets/images/jaanu1.png', import.meta.url).href;
+const jaanuDressDescriptionImage = new URL('../assets/images/jaanu1_desc.png', import.meta.url).href;
+const jaanu2DressImage = new URL('../assets/images/jaanu2.png', import.meta.url).href;
+const jaanu2DressDescriptionImage = new URL('../assets/images/jaanu2_desc.png', import.meta.url).href;
+const jaanu3DressImage = new URL('../assets/images/jaanu3.png', import.meta.url).href;
+const jaanu4DressImage = new URL('../assets/images/jaanu4.png', import.meta.url).href;
+const jaanu4DressDescriptionImage = new URL('../assets/images/jaanu4_desc.png', import.meta.url).href;
+const jaanu5DressImage = new URL('../assets/images/jaanu5.png', import.meta.url).href;
+const jaanu5DressDescriptionImage = new URL('../assets/images/jaanu5_desc.png', import.meta.url).href;
+const jaanu6DressImage = new URL('../assets/images/jaanu6.png', import.meta.url).href;
+const jaanu6DressDescriptionImage = new URL('../assets/images/jaanu6_desc.png', import.meta.url).href;
+const jaanu7DressImage = new URL('../assets/images/jaanu7.png', import.meta.url).href;
+const jaanu7DressDescriptionImage = new URL('../assets/images/jaanu7_desc.png', import.meta.url).href;
 const whiteTopImage = new URL('../assets/images/white_top.png', import.meta.url).href;
 const whiteTopDescriptionImage = new URL('../assets/images/white_top_desc.png', import.meta.url).href;
 
@@ -278,6 +291,55 @@ export const products: Product[] = [
     category: 'womens', subcategory: 'Tops', size: 'M', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A black short-sleeved top with contrast white trim and a tie detail at the neckline.',
     measurements: 'Size M.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu-floral-dress', title: 'Floral Sundress', brand: 'GOSH finds', price: 400,
+    image: jaanuDressImage, images: [jaanuDressImage, jaanuDressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A sleeveless sundress with a mint, yellow and white floral print and a gathered bodice.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu2-floral-dress', title: 'White Floral Dress', brand: 'GOSH finds', price: 450,
+    image: jaanu2DressImage, images: [jaanu2DressImage, jaanu2DressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A white mini dress with a small floral print, puff sleeves and a softly gathered neckline.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu3-brown-polo-dress', title: 'Brown Polo Dress', brand: 'GOSH finds', price: 300,
+    image: jaanu3DressImage, images: [jaanu3DressImage],
+    category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A brown short-sleeved polo dress with cream chest stripes and a button placket.',
+    measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu4-floral-slip-dress', title: 'Floral Slip Dress', brand: 'GOSH finds', price: 400,
+    image: jaanu4DressImage, images: [jaanu4DressImage, jaanu4DressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A dark plum floral slip dress with lace trim, adjustable straps and an asymmetrical layered hem.',
+    measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu5-pink-floral-maxi-dress', title: 'Pink Floral Maxi Dress', brand: 'GOSH finds', price: 500,
+    image: jaanu5DressImage, images: [jaanu5DressImage, jaanu5DressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A pink floral maxi dress with a draped neckline, tie-up shoulder straps and a softly ruched waist.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu6-striped-shirt-dress', title: 'Striped Shirt Dress', brand: 'GOSH finds', price: 350,
+    image: jaanu6DressImage, images: [jaanu6DressImage, jaanu6DressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A black-and-white vertically striped shirt dress with three-quarter sleeves, buttons and a tie waist.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu7-lilac-floral-dress', title: 'Lilac Floral Dress', brand: 'GOSH finds', price: 450,
+    image: jaanu7DressImage, images: [jaanu7DressImage, jaanu7DressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A lilac floral-print dress with puff sleeves, a front tie and a ruffled hem.',
+    measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   }
 ];
 
@@ -289,4 +351,4 @@ export const heroSlides = [{
 }];
 
 export const curatedHighlights = [];
-export const missionStatement = { headline: 'A small edit, made personal', paragraphs: ['GOSH is a place for skirts, tops and dresses to find a new home.'], image: image('photo-1483985988355-763728e1935b') };
+export const missionStatement = { headline: 'A small edit, made personal', paragraphs: ['Shop pre-loved clothes or list your own on GOSH, giving good pieces a chance to find a new home.'], image: image('photo-1483985988355-763728e1935b') };

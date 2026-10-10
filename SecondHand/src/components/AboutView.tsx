@@ -21,7 +21,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               Reimagining the Lifecycle of Elegance.
             </h1>
             <p className="font-sans text-sm leading-relaxed text-luxury-gray md:text-base mb-8">
-              We believe that true luxury is sustainable. GOSH was born from a desire to strip away the clutter of traditional resale, offering a curated, editorial experience for the ethically-minded professional. Every piece has a story; we are merely the curators of its next chapter.
+              GOSH gives pre-loved clothes another chance to be loved. Browse our finds, or list your own clothes on the site so someone else can discover and enjoy them. Every piece has a story, and together we can help it continue.
             </p>
             <button
               onClick={() => setView('shop')}
@@ -84,7 +84,7 @@ export default function AboutView({ setView }: AboutViewProps) {
                 What started as a personal archive of timeless pieces quickly evolved into a movement against the disposable nature of modern fashion. We saw a disconnect between the desire for high-end aesthetics and the environmental toll of producing them.
               </p>
               <p>
-                Our founders set out to build a platform that didn't just sell secondhand clothes, but elevated them. By treating pre-loved garments with the same reverence as new haute couture, we shift the paradigm. We are building a community that values quality over quantity, and longevity over fleeting trends.
+                GOSH is a place to shop pre-loved clothes and a platform where others can list their own pieces for sale. By giving sellers a way to pass clothes on and shoppers a place to find them, we are building a community that values quality over quantity and gives good clothes a longer life.
               </p>
             </div>
           </div>
