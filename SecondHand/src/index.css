@@ -12,9 +12,23 @@
   --color-luxury-border: #E5E5E0;
 }
 
+:root {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-luxury-sand: #1d1b19;
+  --color-luxury-charcoal: #f2eee8;
+  --color-luxury-gray: #bbb4aa;
+  --color-luxury-border: #49443e;
+}
+
 body {
-  background-color: #FAF9F6;
-  color: #1C1C1C;
+  min-width: 320px;
+  background-color: var(--color-luxury-sand);
+  color: var(--color-luxury-charcoal);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -27,4 +41,61 @@ select {
 option {
   background-color: #FAF9F6 !important;
   color: #1C1C1C !important;
+}
+
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] option {
+  background-color: var(--color-luxury-sand) !important;
+  color: var(--color-luxury-charcoal) !important;
+}
+
+:root[data-theme="dark"] [class~="bg-white"],
+:root[data-theme="dark"] [class~="bg-[#FBFBFA]"],
+:root[data-theme="dark"] [class~="bg-[#FAFBF9]"],
+:root[data-theme="dark"] [class~="bg-[#FAF9F6]"],
+:root[data-theme="dark"] [class~="bg-[#fcf9f8]"],
+:root[data-theme="dark"] [class~="bg-[#f4eee6]"] {
+  background-color: #292622 !important;
+}
+
+:root[data-theme="dark"] [class~="bg-[#e9e2d8]"],
+:root[data-theme="dark"] [class~="bg-[#eee8df]"] {
+  background-color: #292622 !important;
+}
+
+:root[data-theme="dark"] .bg-luxury-charcoal {
+  background-color: #d8cbb9 !important;
+  color: #201d19 !important;
+}
+
+:root[data-theme="dark"] [class~="text-[#1C1C1C]"],
+:root[data-theme="dark"] [class~="text-black"] {
+  color: var(--color-luxury-charcoal) !important;
+}
+
+:root[data-theme="dark"] [class~="text-[#1c1b1b]"] {
+  color: var(--color-luxury-charcoal) !important;
+}
+
+:root[data-theme="dark"] [class~="border-[#eae7e7]"] {
+  border-color: var(--color-luxury-border) !important;
+}
+
+:root[data-theme="dark"] [class~="border-[#1C1C1C]"] {
+  border-color: var(--color-luxury-charcoal) !important;
+}
+
+:focus-visible {
+  outline: 2px solid #9b6b50;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

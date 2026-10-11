@@ -2,19 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { ViewState, Product } from '../types';
 import { products } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Maximize2, X, Scale, RefreshCw, Milestone } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Maximize2, X, Scale, ArrowLeft, Heart, ShoppingBag } from 'lucide-react';
 import { formatINR } from '../utils/currency';
 
 interface ProductDetailViewProps {
   product: Product;
   setView: (view: ViewState) => void;
   setSelectedProduct: (product: Product) => void;
+  onBack: () => void;
+  onAddToCart: (product: Product) => void;
+  isWishlisted: boolean;
+  onToggleWishlist: () => void;
 }
 
 export default function ProductDetailView({
   product,
   setView,
   setSelectedProduct,
+  onBack,
+  onAddToCart,
+  isWishlisted,
+  onToggleWishlist,
 }: ProductDetailViewProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
@@ -30,7 +38,7 @@ export default function ProductDetailView({
   }, [product]);
 
   const gallerySlides = [
-    { label: 'Skirt photo', src: product.image },
+    { label: 'Product photo', src: product.image },
     ...(product.id === 'brown-ruched-marble-skirt' && product.images[1]
       ? [{ label: 'Styling ideas', src: product.images[1] }]
       : (product.images || []).slice(1).map((src, index) => ({ label: `View ${index + 2}`, src })))
@@ -48,7 +56,7 @@ export default function ProductDetailView({
 
   // Get matching products (same category or general recommendations, excluding active)
   const curatedMatches = products
-    .filter((p) => p.id !== product.id)
+    .filter((p) => p.id !== product.id && !p.isSoldOut && p.category === product.category)
     .slice(0, 3);
 
   const toggleSection = (section: 'measurements' | 'shipping') => {
@@ -60,7 +68,8 @@ export default function ProductDetailView({
       <div className="mx-auto max-w-7xl">
         
         {/* Breadcrumb utility info */}
-        <div className="flex items-center space-x-2 font-mono text-[10px] tracking-widest text-luxury-gray uppercase mb-10 pb-4 border-b border-luxury-border/30">
+        <div className="mb-7 flex flex-wrap items-center gap-2 border-b border-luxury-border/30 pb-4 font-mono text-[10px] uppercase tracking-widest text-luxury-gray">
+          <button onClick={onBack} className="inline-flex min-h-11 items-center gap-2 pr-2 text-luxury-charcoal" aria-label="Go back to previous page"><ArrowLeft className="h-4 w-4" />Back</button>
           <button onClick={() => setView('home')} className="hover:text-luxury-charcoal">Home</button>
           <span>/</span>
           <button onClick={() => setView('shop')} className="hover:text-luxury-charcoal">The Collection</button>
@@ -136,14 +145,23 @@ export default function ProductDetailView({
             </div>
             <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-luxury-gray">Shipping charged separately · Free on orders over ₹900</p>
 
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button onClick={() => onAddToCart(product)} disabled={product.isSoldOut || product.price <= 0} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 bg-luxury-charcoal px-5 text-xs font-semibold uppercase tracking-widest text-white disabled:cursor-not-allowed disabled:opacity-50">
+                <ShoppingBag className="h-4 w-4" />{product.isSoldOut ? 'Sold out' : product.price <= 0 ? 'Price to be added' : 'Add to bag'}
+              </button>
+              <button onClick={onToggleWishlist} aria-pressed={isWishlisted} className="inline-flex min-h-12 items-center justify-center gap-2 border border-luxury-charcoal px-4 text-xs font-semibold uppercase tracking-widest text-luxury-charcoal" aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}>
+                <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />{isWishlisted ? 'Saved' : 'Save'}
+              </button>
+            </div>
+
             {/* Specs Tags Badges */}
             <div className="flex flex-wrap gap-2 py-6 border-b border-luxury-border">
               <span id="badge-size" className="font-mono text-[10px] tracking-widest text-[#1C1C1C] border border-[#1C1C1C] bg-[#FBFBFA] px-3 py-1.5 uppercase font-medium">
                 Size: {product.sizeLabel || product.size}
               </span>
-              {product.conditionConfirmed !== false && <span id="badge-condition" className="font-mono text-[10px] tracking-widest text-[#1C1C1C] border border-[#1C1C1C] bg-[#FBFBFA] px-3 py-1.5 uppercase font-medium">
-                Condition: {product.condition}
-              </span>}
+              <span id="badge-condition" className="font-mono text-[10px] tracking-widest text-[#1C1C1C] border border-[#1C1C1C] bg-[#FBFBFA] px-3 py-1.5 uppercase font-medium">
+                {product.conditionConfirmed === false ? 'Condition details pending confirmation' : `Condition: ${product.conditionNote || product.condition}`}
+              </span>
               {product.material !== 'Add fabric details' && <span id="badge-material" className="font-mono text-[10px] tracking-widest text-[#1C1C1C] border border-[#1C1C1C] bg-[#FBFBFA] px-3 py-1.5 uppercase font-medium">Material: {product.material}</span>}
             </div>
 
@@ -168,6 +186,7 @@ export default function ProductDetailView({
             {/* Accordion list */}
             <div className="border-t border-luxury-border">
               {/* Measurements Section */}
+              {product.measurements.trim() !== '' && (
               <div className="border-b border-luxury-border">
                 <button
                   id="toggle-measurements"
@@ -199,6 +218,7 @@ export default function ProductDetailView({
                   )}
                 </AnimatePresence>
               </div>
+              )}
 
               {/* Shipping Section */}
               <div className="border-b border-luxury-border">
@@ -207,7 +227,7 @@ export default function ProductDetailView({
                   onClick={() => toggleSection('shipping')}
                   className="w-full flex justify-between items-center py-4 font-serif text-[15px] font-medium tracking-wide text-luxury-charcoal text-left"
                 >
-                  <span>Premium Shipping & Safe Returns</span>
+                  <span>Shipping and order support</span>
                   {openSection === 'shipping' ? <ChevronUp className="h-4.5 w-4.5 text-luxury-charcoal" /> : <ChevronDown className="h-4.5 w-4.5 text-luxury-charcoal" />}
                 </button>
                 <AnimatePresence initial={false}>
@@ -220,18 +240,9 @@ export default function ProductDetailView({
                     >
                       <div className="bg-[#FAFBF9] border border-luxury-border p-4 text-xs space-y-3 font-mono text-neutral-600">
                         <p className="font-sans text-xs text-luxury-gray mt-1 leading-relaxed">
-                          {product.shipping}
+                          Shipping is charged separately and confirmed before an order is finalized. Contact GOSH on WhatsApp to confirm availability, delivery cost, and order details.
                         </p>
-                        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-luxury-border/50 font-sans text-[10px] text-luxury-charcoal uppercase">
-                          <div className="flex items-center space-x-1.5">
-                            <RefreshCw className="h-3.5 w-3.5" />
-                            <span>14-Day Free Returns</span>
-                          </div>
-                          <div className="flex items-center space-x-1.5">
-                            <Milestone className="h-3.5 w-3.5" />
-                            <span>Carbon-Neutral Cycle</span>
-                          </div>
-                        </div>
+                        <a href={`https://wa.me/917338546697?text=${encodeURIComponent(`Hi, I have a question about ${product.title}.`)}`} target="_blank" rel="noreferrer" className="inline-block font-sans text-xs font-medium text-luxury-charcoal underline underline-offset-4">Ask GOSH on WhatsApp</a>
                       </div>
                     </motion.div>
                   )}
@@ -278,7 +289,7 @@ export default function ProductDetailView({
                     {match.title}
                   </h4>
                   <span className="font-mono text-xs text-luxury-charcoal font-semibold mt-1">
-                    {formatINR(match.price)}
+                    {match.price > 0 ? formatINR(match.price) : 'Price to be added'}
                   </span>
                 </div>
               </div>

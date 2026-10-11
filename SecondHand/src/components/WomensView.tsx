@@ -39,7 +39,7 @@ export default function WomensView({
   };
 
   const subcategories = subcategoriesMap[selectedMain] || ['All'];
-  const sizes = ['XS', 'S', 'M', 'L'];
+  const sizes = ['XS', 'S', 'M', 'L', 'XL'];
   const conditions = ['Pristine', 'Excellent', 'Very Good'];
 
   const handleSizeToggle = (size: string) => {
@@ -75,7 +75,8 @@ export default function WomensView({
       // 2. Subcategory Match
       const currentLabel = mainCategories.find(c => c.id === selectedMain)?.allSelectLabel;
       if (selectedSub !== currentLabel) {
-        if (product.subcategory.toLowerCase() !== selectedSub.toLowerCase()) {
+        const expectedSubcategory = selectedSub === 'Tops & Blouses' ? ['tops', 'tops & blouses'] : [selectedSub.toLowerCase()];
+        if (!expectedSubcategory.includes(product.subcategory.toLowerCase())) {
           return false;
         }
       }
@@ -91,7 +92,7 @@ export default function WomensView({
       }
 
       return true;
-    });
+    }).reverse();
   }, [selectedMain, selectedSub, selectedSizes, selectedConditions]);
 
   const displayedProducts = useMemo(() => {
@@ -247,16 +248,19 @@ export default function WomensView({
                         <img
                           src={product.image}
                           alt={product.title}
+                          loading="lazy"
                           onClick={() => handleProductClick(product)}
                           className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-102"
                           referrerPolicy="no-referrer"
                         />
+                        {product.isSoldOut && <span className="absolute inset-x-0 bottom-0 bg-black/75 py-3 text-center font-mono text-xs font-semibold tracking-[0.2em] text-white">SOLD OUT</span>}
 
                         {/* Heart Wishlist Overlay */}
                         <button
-                          onClick={() => onToggleWishlist(product)}
-                          className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-luxury-sand/80 shadow backdrop-blur-xs transition-colors hover:bg-luxury-sand"
-                          aria-label="Wishlist toggle"
+                          onClick={(event) => { event.stopPropagation(); onToggleWishlist(product); }}
+                          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-luxury-sand/80 shadow backdrop-blur-xs transition-colors hover:bg-luxury-sand"
+                          aria-label={isProductInWishlist(product.id) ? `Remove ${product.title} from wishlist` : `Add ${product.title} to wishlist`}
+                          aria-pressed={isProductInWishlist(product.id)}
                         >
                           <Heart
                             className={`h-4.5 w-4.5 transition-colors ${
@@ -287,10 +291,10 @@ export default function WomensView({
 
                         <div className="mt-4 pt-2.5 border-t border-luxury-border/40 flex items-center justify-between">
                           <span className="font-sans text-[11px] text-gray-500 uppercase">
-                            Size {product.size} • {product.material.split(' ')[1] || 'Fabric'}
+                            Size {product.sizeLabel || product.size}{product.isSoldOut ? ' · Sold out' : ''}
                           </span>
                           <span className="font-mono text-sm text-[#1C1C1C] font-semibold">
-                            {formatINR(product.price)}
+                            {product.price > 0 ? formatINR(product.price) : 'Price to be added'}
                           </span>
                         </div>
                       </div>

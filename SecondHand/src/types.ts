@@ -14,6 +14,7 @@ export interface Product {
   filterSize?: string;
   condition: 'Pristine' | 'Excellent' | 'Very Good';
   conditionConfirmed?: boolean;
+  conditionNote?: string;
   material: string;
   description: string;
   measurements: string;

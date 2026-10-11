@@ -21,7 +21,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               Reimagining the Lifecycle of Elegance.
             </h1>
             <p className="font-sans text-sm leading-relaxed text-luxury-gray md:text-base mb-8">
-              GOSH gives pre-loved clothes another chance to be loved. Browse our finds, or list your own clothes on the site so someone else can discover and enjoy them. Every piece has a story, and together we can help it continue.
+              GOSH gives pre-loved clothes another chance to be loved. Browse our finds, or get in touch to list your own clothes for someone else to discover. Every piece has a story, and together we can help it continue.
             </p>
             <button
               onClick={() => setView('shop')}
@@ -30,6 +30,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               Explore GOSH Archives
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
+            <a href="https://wa.me/917338546697?text=Hi%20GOSH%2C%20I%E2%80%99d%20like%20to%20list%20clothes%20for%20sale." target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center rounded-full border border-luxury-charcoal px-6 py-3 text-xs font-semibold tracking-widest text-luxury-charcoal uppercase transition-colors hover:bg-[#18231a] hover:text-white">Sell with GOSH</a>
           </div>
           
           <div className="md:col-span-6 md:col-start-7">
@@ -81,10 +82,10 @@ export default function AboutView({ setView }: AboutViewProps) {
             </h2>
             <div className="space-y-4 font-sans text-sm md:text-base text-luxury-gray leading-relaxed">
               <p>
-                What started as a personal archive of timeless pieces quickly evolved into a movement against the disposable nature of modern fashion. We saw a disconnect between the desire for high-end aesthetics and the environmental toll of producing them.
+                GOSH brings together pre-loved clothes and people looking for their next favourite piece. Sellers can message us to ask about listing their clothes, and shoppers can browse what is currently available.
               </p>
               <p>
-                GOSH is a place to shop pre-loved clothes and a platform where others can list their own pieces for sale. By giving sellers a way to pass clothes on and shoppers a place to find them, we are building a community that values quality over quantity and gives good clothes a longer life.
+                GOSH is a place to shop pre-loved clothes, and other people can sell their own pieces here too. Message us to learn how to list an item. By connecting sellers and shoppers, we are building a community that values quality over quantity and gives good clothes a longer life.
               </p>
             </div>
           </div>
@@ -102,7 +103,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               Core Values
             </h2>
             <p className="font-sans text-xs md:text-sm text-luxury-gray max-w-2xl mx-auto leading-relaxed">
-              The principles that guide our curation and define our commitment to a better future for fashion.
+              A few simple ideas guide the way we share pre-loved clothing.
             </p>
           </div>
           
@@ -114,7 +115,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               </div>
               <h3 className="font-serif text-lg text-luxury-charcoal uppercase tracking-wider mb-3">Quality</h3>
               <p className="font-sans text-xs md:text-sm text-luxury-gray leading-relaxed">
-                We meticulously source materials and garments that meet the highest standards of craftsmanship, ensuring each piece is worthy of its second life.
+                We share the product photos and details available for each listing. If you need another angle or more information, contact us before ordering.
               </p>
             </div>
 
@@ -125,7 +126,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               </div>
               <h3 className="font-serif text-lg text-luxury-charcoal uppercase tracking-wider mb-3">Longevity</h3>
               <p className="font-sans text-xs md:text-sm text-luxury-gray leading-relaxed">
-                Style shouldn't have an expiration date. We focus on timeless silhouettes and durable construction intended to be worn for decades, not seasons.
+                Pre-loved clothing can be passed on and enjoyed by someone new. Browse the current collection to see what is available.
               </p>
             </div>
 
@@ -136,7 +137,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               </div>
               <h3 className="font-serif text-lg text-luxury-charcoal uppercase tracking-wider mb-3">Ethics</h3>
               <p className="font-sans text-xs md:text-sm text-luxury-gray leading-relaxed">
-                Privacy and transparency remain our baseline. By participating in the circular economy, we actively reduce water waist and CO₂ prints.
+                We aim to be clear about listed prices and sizing notes. Shipping and availability are confirmed with you before an order is final.
               </p>
             </div>
           </div>

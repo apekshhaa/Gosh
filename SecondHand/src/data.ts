@@ -23,6 +23,8 @@ const purplePulloverImage = new URL('../assets/images/purple_pullover.png', impo
 const purplePulloverDescriptionImage = new URL('../assets/images/purple_pullover_desc.png', import.meta.url).href;
 const stripeTopImage = new URL('../assets/images/stripe.png', import.meta.url).href;
 const stripeTopDescriptionImage = new URL('../assets/images/strip_desc.png', import.meta.url).href;
+const offShoulderImage = new URL('../assets/images/off_shoulder.png', import.meta.url).href;
+const offShoulderDescriptionImage = new URL('../assets/images/off_shoulder_desc.png', import.meta.url).href;
 const polkaSkirtImage = new URL('../assets/images/polka.png', import.meta.url).href;
 const polkaSkirtDescriptionImage = new URL('../assets/images/polka_desc.png', import.meta.url).href;
 const mensPantImage = new URL('../assets/images/pant1.png', import.meta.url).href;
@@ -56,6 +58,7 @@ const jaanuDressDescriptionImage = new URL('../assets/images/jaanu1_desc.png', i
 const jaanu2DressImage = new URL('../assets/images/jaanu2.png', import.meta.url).href;
 const jaanu2DressDescriptionImage = new URL('../assets/images/jaanu2_desc.png', import.meta.url).href;
 const jaanu3DressImage = new URL('../assets/images/jaanu3.png', import.meta.url).href;
+const jaanu3DressDescriptionImage = new URL('../assets/images/jaanu3_desc.png', import.meta.url).href;
 const jaanu4DressImage = new URL('../assets/images/jaanu4.png', import.meta.url).href;
 const jaanu4DressDescriptionImage = new URL('../assets/images/jaanu4_desc.png', import.meta.url).href;
 const jaanu5DressImage = new URL('../assets/images/jaanu5.png', import.meta.url).href;
@@ -64,6 +67,22 @@ const jaanu6DressImage = new URL('../assets/images/jaanu6.png', import.meta.url)
 const jaanu6DressDescriptionImage = new URL('../assets/images/jaanu6_desc.png', import.meta.url).href;
 const jaanu7DressImage = new URL('../assets/images/jaanu7.png', import.meta.url).href;
 const jaanu7DressDescriptionImage = new URL('../assets/images/jaanu7_desc.png', import.meta.url).href;
+const jaanu8TopImage = new URL('../assets/images/jaanu8.png', import.meta.url).href;
+const jaanu8TopDescriptionImage = new URL('../assets/images/jaanu8_desc.png', import.meta.url).href;
+const jaanu9TopImage = new URL('../assets/images/jaanu9.png', import.meta.url).href;
+const jaanu9TopDescriptionImage = new URL('../assets/images/jaanu9_desc.png', import.meta.url).href;
+const bowDressImage = new URL('../assets/images/bow_dress.png', import.meta.url).href;
+const bowDressDescriptionImage = new URL('../assets/images/bow_dress_desc.png', import.meta.url).href;
+const jaanu12BlouseImage = new URL('../assets/images/jaanu12.png', import.meta.url).href;
+const jaanu12BlouseDescriptionImage = new URL('../assets/images/jaanu12_desc.png', import.meta.url).href;
+const jaanu11TopImage = new URL('../assets/images/jaanu11.png', import.meta.url).href;
+const jaanu11TopDescriptionImage = new URL('../assets/images/jaanu11_desc.png', import.meta.url).href;
+const jaanu10TopImage = new URL('../assets/images/jaanu10.png', import.meta.url).href;
+const jaanu10TopDescriptionImage = new URL('../assets/images/jaanu10_desc.png', import.meta.url).href;
+const skortImage = new URL('../assets/images/skort.png', import.meta.url).href;
+const skortDescriptionImage = new URL('../assets/images/skort_desc.png', import.meta.url).href;
+const purpleDressImage = new URL('../assets/images/purple_dress.png', import.meta.url).href;
+const purpleDressDescriptionImage = new URL('../assets/images/purple_dress_desc.png', import.meta.url).href;
 const whiteTopImage = new URL('../assets/images/white_top.png', import.meta.url).href;
 const whiteTopDescriptionImage = new URL('../assets/images/white_top_desc.png', import.meta.url).href;
 
@@ -78,44 +97,44 @@ export const products: Product[] = [
   {
     id: 'black-top', title: 'Black Top', brand: 'GOSH finds', price: 400,
     image: blackTopImage, images: [blackTopImage, blackTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'M', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'M', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Very nice condition', material: 'Add fabric details',
     description: 'A black sleeveless top with slim shoulder straps and a large cream floral motif across the front.',
-    measurements: 'Add measurements if available.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+    measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
     id: 'green-top', title: 'Green Top', brand: 'GOSH finds', price: 300,
     image: greenTopImage, images: [greenTopImage, greenTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Lovely condition overall', material: 'Add fabric details',
     description: 'A cream cropped top with a delicate green leafy print, softly puffed sleeves and a gathered front. Worn once.',
-    measurements: 'Add measurements if available.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+    measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'red-top', title: 'Red Printed Top', brand: 'GOSH finds', price: 200,
+    id: 'red-top', title: 'Red Printed Top', brand: 'GOSH finds', price: 250,
     image: redTopImage, images: [redTopImage, redTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'In very nice condition', material: 'Add fabric details',
     description: 'A red long-sleeved top covered in a bold dark ornamental print, with a simple round neckline.',
-    measurements: 'Add measurements if available.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+    measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
     id: 'brown-dress', title: 'Brown Dress', brand: 'NEWME', price: 600, originalPrice: 1600, discount: '-63%',
     image: brownDressImage, images: [brownDressImage, brownDressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A deep burgundy long-sleeved dress with an all-over lace pattern, crossover V-neck and gently flared skirt by NEWME.',
-    measurements: 'Add measurements if available.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+    measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
     id: 'floral-top', title: 'Floral Tube Top', brand: 'GOSH finds', price: 300,
     image: floralTubeImage, images: [floralTubeImage, floralTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'A very nice pre-loved piece', material: 'Add fabric details',
     description: 'A strapless ruched top in a bright abstract floral print with pink, blue, purple, green and yellow tones.',
-    measurements: 'Add measurements if available.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+    measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'blue-tube-top', title: 'Blue Tube Top', brand: 'GOSH finds', price: 250,
+    id: 'blue-tube-top', title: 'Blue Tube Top', brand: 'GOSH finds', price: 300,
     image: blueTubeImage, images: [blueTubeImage, blueTubeDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Very nice condition overall', material: 'Add fabric details',
     description: 'A light-blue tube-style top with a darker blue paisley print and softly draped, overlapping panels. Never worn.',
-    measurements: 'Add measurements if available.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+    measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
     id: 'black-skirt', title: 'Black and White Skirt', brand: 'GOSH finds', price: 300,
@@ -127,16 +146,23 @@ export const products: Product[] = [
   {
     id: 'purple-pullover', title: 'Lavender Pullover', brand: 'GOSH finds', price: 350, isSoldOut: true,
     image: purplePulloverImage, images: [purplePulloverImage, purplePulloverDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'In lovely condition', material: 'Add fabric details',
     description: 'A cropped lavender pullover with an open-knit pattern, long sleeves and ribbed trim at the neckline, cuffs and hem.',
-    measurements: 'Add measurements if available.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+    measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'stripe-top', title: 'Cold Shoulder Top', brand: 'GOSH finds', price: 150,
+    id: 'stripe-top', title: 'Cold Shoulder Top', brand: 'GOSH finds', price: 200,
     image: stripeTopImage, images: [stripeTopImage, stripeTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', sizeLabel: 'XXS (fits S)', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', sizeLabel: 'XXS (fits S)', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Very nice, well-presented condition', material: 'Add fabric details',
     description: 'A relaxed short-sleeved top with fine taupe and white horizontal stripes, shoulder cut-outs and a wide, softly draped neckline. Label size XXS; fits size S.',
     measurements: 'Size XXS; fits S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'off-shoulder-top', title: 'Off Shoulder Top', brand: 'GOSH finds', price: 450,
+    image: offShoulderImage, images: [offShoulderImage, offShoulderDescriptionImage],
+    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'In lovely, very nice condition', material: 'Add fabric details',
+    description: 'An off-shoulder top in size S.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
     id: 'polka-skirt', title: 'Polka Dot Skirt', brand: 'GOSH finds', price: 400, isSoldOut: true,
@@ -218,7 +244,7 @@ export const products: Product[] = [
   {
     id: 'red-white-shirt', title: 'Red and White Check Shirt', brand: 'GOSH finds', price: 150,
     image: redWhiteShirtImage, images: [redWhiteShirtImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'A lovely piece in very nice condition', material: 'Add fabric details',
     description: 'A red long-sleeved shirt with a white windowpane check and button-front detail.',
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
@@ -253,7 +279,7 @@ export const products: Product[] = [
   {
     id: 'white-top', title: 'White Top', brand: 'GOSH finds', price: 300,
     image: whiteTopImage, images: [whiteTopImage, whiteTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'L', sizeLabel: 'L (fits M)', filterSize: 'L', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'L', sizeLabel: 'L (fits M)', filterSize: 'L', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Very nice condition and ready to wear', material: 'Add fabric details',
     description: 'A white short-sleeved top with a gathered drawstring detail at the side.',
     measurements: 'Label size L; fits M.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
@@ -267,7 +293,7 @@ export const products: Product[] = [
   {
     id: 'pink-striped-top', title: 'Pink Striped Top', brand: 'GOSH finds', price: 300,
     image: pinkTopImage, images: [pinkTopImage, pinkTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'S', sizeLabel: 'S (fits M)', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'S', sizeLabel: 'S (fits M)', filterSize: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'In lovely condition', material: 'Add fabric details',
     description: 'A short-sleeved pink-and-white striped top with ribbed trim.',
     measurements: 'Label size S; fits M.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
@@ -281,14 +307,14 @@ export const products: Product[] = [
   {
     id: 'grey-striped-knot-top', title: 'Grey Striped Knot Top', brand: 'GOSH finds', price: 300,
     image: knotTopImage, images: [knotTopImage, knotTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'M', sizeLabel: 'XL (fits S and M)', filterSize: 'M', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'M', sizeLabel: 'XL (fits S and M)', filterSize: 'M', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Very nice pre-loved condition', material: 'Add fabric details',
     description: 'A long-sleeved grey-and-white striped top with a front knot detail.',
     measurements: 'Label size XL; fits S and M.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
     id: 'black-tie-front-top', title: 'Black Tie-Front Top', brand: 'GOSH finds', price: 300,
     image: blackTieTopImage, images: [blackTieTopImage, blackTieTopDescriptionImage],
-    category: 'womens', subcategory: 'Tops', size: 'M', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    category: 'womens', subcategory: 'Tops', size: 'M', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'A very nice top in lovely condition', material: 'Add fabric details',
     description: 'A black short-sleeved top with contrast white trim and a tie detail at the neckline.',
     measurements: 'Size M.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
@@ -308,7 +334,7 @@ export const products: Product[] = [
   },
   {
     id: 'jaanu3-brown-polo-dress', title: 'Brown Polo Dress', brand: 'GOSH finds', price: 300, isSoldOut: true,
-    image: jaanu3DressImage, images: [jaanu3DressImage],
+    image: jaanu3DressImage, images: [jaanu3DressImage, jaanu3DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A brown short-sleeved polo dress with cream chest stripes and a button placket.',
     measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
@@ -321,7 +347,7 @@ export const products: Product[] = [
     measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu5-pink-floral-maxi-dress', title: 'Pink Floral Maxi Dress', brand: 'GOSH finds', price: 350, isSoldOut: true,
+    id: 'jaanu5-pink-floral-maxi-dress', title: 'Pink Floral Maxi Dress', brand: 'GOSH finds', price: 400, isSoldOut: true,
     image: jaanu5DressImage, images: [jaanu5DressImage, jaanu5DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A pink floral maxi dress with a draped neckline, tie-up shoulder straps and a softly ruched waist.',
@@ -335,11 +361,67 @@ export const products: Product[] = [
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu7-lilac-floral-dress', title: 'Lilac Floral Dress', brand: 'GOSH finds', price: 350, isSoldOut: true,
+    id: 'jaanu7-lilac-floral-dress', title: 'Lilac Floral Dress', brand: 'GOSH finds', price: 300, isSoldOut: true,
     image: jaanu7DressImage, images: [jaanu7DressImage, jaanu7DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'XS', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A lilac floral-print dress with puff sleeves, a front tie and a ruffled hem.',
     measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu8-ribbed-sleeveless-top', title: 'Ribbed Sleeveless Top', brand: 'GOSH finds', price: 200,
+    image: jaanu8TopImage, images: [jaanu8TopImage, jaanu8TopDescriptionImage],
+    category: 'womens', subcategory: 'Tops', size: 'XS', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'In very nice, well-kept condition', material: 'Soft ribbed fabric',
+    description: 'An off-white ribbed sleeveless top with a classic crew neckline and fitted silhouette.',
+    measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu9-daisy-floral-tee', title: 'Daisy Floral Tee', brand: 'GOSH finds', price: 250,
+    image: jaanu9TopImage, images: [jaanu9TopImage, jaanu9TopDescriptionImage],
+    category: 'womens', subcategory: 'Tops', size: 'XS', sizeLabel: 'XS', filterSize: 'XS', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'A lovely top in very nice condition', material: 'Ribbed stretch fabric',
+    description: 'A fitted cream T-shirt with a delicate daisy print, classic crew neckline and short sleeves.',
+    measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'bow-print-bodycon-dress', title: 'Bow Print Bodycon Dress', brand: 'GOSH finds', price: 450,
+    image: bowDressImage, images: [bowDressImage, bowDressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A black bow-print bodycon mini dress with a ruched bodice, off-shoulder neckline, sheer long sleeves and flared cuffs.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu12-ivory-eyelet-blouse', title: 'Ivory Eyelet Blouse', brand: 'GOSH finds', price: 350,
+    image: jaanu12BlouseImage, images: [jaanu12BlouseImage, jaanu12BlouseDescriptionImage],
+    category: 'womens', subcategory: 'Tops', size: 'XS', sizeLabel: 'XS', filterSize: 'XS', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Very nice condition with a lovely finish', material: 'Eyelet fabric',
+    description: 'An ivory blouse with eyelet embroidery, ruffle sleeves, a deep V neckline and a ruched front with tie-up detail.',
+    measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu11-polka-dot-peplum-top', title: 'Polka Dot Peplum Top', brand: 'GOSH finds', price: 400,
+    image: jaanu11TopImage, images: [jaanu11TopImage, jaanu11TopDescriptionImage],
+    category: 'womens', subcategory: 'Tops', size: 'S', sizeLabel: 'Not specified', filterSize: 'Unspecified', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Very nice condition, with a lovely finish', material: 'Lightweight textured fabric',
+    description: 'A cream sleeveless peplum top with a subtle polka-dot pattern, spaghetti straps, a smocked waist and a ruffled hem.',
+    measurements: 'Size not specified.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'jaanu10-blush-textured-top', title: 'Blush Textured Top', brand: 'GOSH finds', price: 400,
+    image: jaanu10TopImage, images: [jaanu10TopImage, jaanu10TopDescriptionImage],
+    category: 'womens', subcategory: 'Tops', size: 'XS', sizeLabel: 'XS', filterSize: 'XS', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'In very nice condition with a textured finish', material: 'Textured fabric',
+    description: 'A cropped blush-pink top with a classic collar, long sleeves and a pointed hem.',
+    measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'pinstripe-tie-skort', title: 'Pinstripe Tie Skort', brand: 'GOSH finds', price: 400,
+    image: skortImage, images: [skortImage, skortDescriptionImage],
+    category: 'womens', subcategory: 'Skirts', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A black pinstripe skort with an adjustable waist tie, A-line shape and shorts underneath.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'sky-blue-shirt-dress', title: 'Sky Blue Shirt Dress', brand: 'GOSH finds', price: 400,
+    image: purpleDressImage, images: [purpleDressImage, purpleDressDescriptionImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
+    description: 'A sky-blue button-down shirt dress with delicate dotted stripes, a classic collar and a softly defined waist.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   }
 ];
 
@@ -351,4 +433,4 @@ export const heroSlides = [{
 }];
 
 export const curatedHighlights = [];
-export const missionStatement = { headline: 'A small edit, made personal', paragraphs: ['Shop pre-loved clothes or list your own on GOSH, giving good pieces a chance to find a new home.'], image: image('photo-1483985988355-763728e1935b') };
+export const missionStatement = { headline: 'A small edit, made personal', paragraphs: ['Shop pre-loved clothes or message GOSH to ask about listing your own, giving good pieces a chance to find a new home.'], image: image('photo-1483985988355-763728e1935b') };

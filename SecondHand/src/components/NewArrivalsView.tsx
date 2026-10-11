@@ -154,7 +154,7 @@ export default function NewArrivalsView({
 
                     <div className="mt-4 pt-3 border-t border-[#EBEBE5] flex items-center justify-between font-mono text-xs text-[#1C1C1C]">
                       <span className="font-sans text-[10px] tracking-wide text-luxury-gray uppercase">
-                        Size {product.size} • {product.condition}
+                        Size {product.size} • {product.conditionNote || product.condition}
                       </span>
                       <span className="font-bold tracking-tight">{formatINR(product.price)}</span>
                     </div>
@@ -207,7 +207,7 @@ export default function NewArrivalsView({
 
                     <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-[10px] font-mono text-[#8A8A7C] uppercase border-t border-[#EBEBE5] pt-3 max-w-xl">
                       <span>Size: <strong className="text-[#1C1C1C] font-semibold">{product.size}</strong></span>
-                      <span>Condition: <strong className="text-[#1C1C1C] font-semibold">{product.condition}</strong></span>
+                      <span>Condition: <strong className="text-[#1C1C1C] font-semibold">{product.conditionNote || product.condition}</strong></span>
                       <span>Material: <strong className="text-[#1C1C1C] font-semibold">{product.material}</strong></span>
                     </div>
                   </div>

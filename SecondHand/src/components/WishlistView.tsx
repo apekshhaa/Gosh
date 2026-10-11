@@ -63,10 +63,12 @@ export default function WishlistView({
                     <img
                       src={product.image}
                       alt={product.title}
+                      loading="lazy"
                       onClick={() => handleProductClick(product)}
                       className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-102 cursor-pointer"
                       referrerPolicy="no-referrer"
                     />
+                    {product.isSoldOut && <span className="absolute inset-x-0 bottom-0 bg-black/75 py-3 text-center font-mono text-xs font-semibold tracking-[0.2em] text-white">SOLD OUT</span>}
 
                     {/* Quick Absolute Remove button */}
                     <button
@@ -86,7 +88,7 @@ export default function WishlistView({
                           {product.brand}
                         </p>
                         <span className="font-mono text-[9px] tracking-wider text-luxury-charcoal bg-luxury-sand px-1.5 py-0.5 border border-luxury-border">
-                          Condition: {product.condition}
+                          Condition: {product.conditionNote || product.condition}
                         </span>
                       </div>
                       
@@ -98,8 +100,8 @@ export default function WishlistView({
                       </h4>
 
                       <div className="flex items-center justify-between mt-3 text-xs font-sans text-luxury-gray">
-                        <span>Fitted size: <strong className="text-luxury-charcoal font-semibold">{product.size}</strong></span>
-                        <span className="font-mono text-sm text-luxury-charcoal font-semibold">{formatINR(product.price)}</span>
+                        <span>Fitted size: <strong className="text-luxury-charcoal font-semibold">{product.sizeLabel || product.size}</strong></span>
+                        <span className="font-mono text-sm text-luxury-charcoal font-semibold">{product.price > 0 ? formatINR(product.price) : 'Price to be added'}</span>
                       </div>
                     </div>
 
@@ -114,10 +116,11 @@ export default function WishlistView({
                       <button
                         id={`move-to-bag-${product.id}`}
                         onClick={() => onMoveToBag(product)}
-                        className="flex-1 flex items-center justify-center space-x-1.5 bg-luxury-charcoal font-semibold text-[10px] tracking-widest text-[#FAF9F6] py-2.5 uppercase hover:bg-opacity-95 transition-all"
+                        disabled={product.isSoldOut || product.price <= 0}
+                        className="flex min-h-11 flex-1 items-center justify-center space-x-1.5 bg-luxury-charcoal px-2 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-[#FAF9F6] transition-all hover:bg-opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <ShoppingBag className="h-3.5 w-3.5" />
-                        <span>Move to Bag</span>
+                        <span>{product.isSoldOut ? 'Sold Out' : product.price <= 0 ? 'Price pending' : 'Move to Bag'}</span>
                       </button>
                     </div>
                   </div>
