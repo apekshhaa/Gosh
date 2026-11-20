@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ViewState, Product } from '../types';
-import { products } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
 import { SlidersHorizontal, ChevronDown, Check, X, Heart } from 'lucide-react';
 import { formatINR } from '../utils/currency';
@@ -13,6 +12,9 @@ interface ShopViewProps {
   clearSearchQuery: () => void;
   wishlist: Product[];
   onToggleWishlist: (product: Product) => void;
+  products: Product[];
+  dataState: 'loading' | 'ready' | 'error';
+  onRetry: () => void;
 }
 
 export default function ShopView({
@@ -22,7 +24,10 @@ export default function ShopView({
   initialCategory = 'All',
   clearSearchQuery,
   wishlist,
-  onToggleWishlist
+  onToggleWishlist,
+  products,
+  dataState,
+  onRetry
 }: ShopViewProps) {
   const savedState = useMemo(() => {
     try { return JSON.parse(window.sessionStorage.getItem('gosh-shop-filters') || '{}') as { category?: string; sizes?: string[]; conditions?: string[]; brand?: string; sortBy?: string; minPrice?: number | ''; maxPrice?: number | '' }; }
@@ -136,7 +141,7 @@ export default function ShopView({
       // 'recommended' is default ordering
       return 0;
     });
-  }, [selectedCategory, selectedSizes, selectedConditions, selectedBrand, minPrice, maxPrice, sortBy, initialSearchQuery]);
+  }, [products, selectedCategory, selectedSizes, selectedConditions, selectedBrand, minPrice, maxPrice, sortBy, initialSearchQuery]);
 
   // Pagination Constants (Show 6 products per page for high luxury presentation)
   const itemsPerPage = 6;
@@ -163,6 +168,8 @@ export default function ShopView({
   return (
     <div className="bg-luxury-sand min-h-screen py-10 px-6 md:py-16 md:px-12">
       <div className="mx-auto max-w-7xl">
+        {dataState === 'loading' && <p className="mb-6 border border-luxury-border px-4 py-3 text-sm text-luxury-gray" role="status">Checking the latest seller listings. The GOSH archive remains available while they load.</p>}
+        {dataState === 'error' && <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border border-luxury-border px-4 py-3 text-sm" role="alert"><span>Seller listings are unavailable right now. Showing the GOSH archive.</span><button onClick={onRetry} className="min-h-10 underline underline-offset-4">Retry</button></div>}
         
         {/* Title area */}
         <div className="flex flex-col mb-10 border-b border-luxury-border pb-6 md:flex-row md:items-end md:justify-between space-y-4 md:space-y-0">

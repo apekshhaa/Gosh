@@ -1,15 +1,15 @@
 import React from 'react';
 import { ViewState, Product } from '../types';
-import { products } from '../data';
 import { ArrowRight } from 'lucide-react';
 
 interface HomeViewProps {
   setView: (view: ViewState) => void;
   setSelectedProduct: (product: Product) => void;
   onSelectCategory: (category: string) => void;
+  products: Product[];
 }
 
-export default function HomeView({ setView, setSelectedProduct, onSelectCategory }: HomeViewProps) {
+export default function HomeView({ setView, setSelectedProduct, onSelectCategory, products }: HomeViewProps) {
   const categories = [
     { label: 'Skirts', image: 'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=900&q=85' },
     { label: 'Tops', image: 'https://images.unsplash.com/photo-1551163943-3f6a855d1153?auto=format&fit=crop&w=900&q=85' },

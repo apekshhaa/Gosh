@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { ViewState, Product } from '../types';
-import { products } from '../data';
 import { motion } from 'motion/react';
 import { Heart, Check, Plus } from 'lucide-react';
 import { formatINR } from '../utils/currency';
@@ -10,13 +9,15 @@ interface WomensViewProps {
   setSelectedProduct: (product: Product) => void;
   onToggleWishlist: (product: Product) => void;
   wishlist: Product[];
+  products: Product[];
 }
 
 export default function WomensView({
   setView,
   setSelectedProduct,
   onToggleWishlist,
-  wishlist
+  wishlist,
+  products
 }: WomensViewProps) {
   const [selectedMain, setSelectedMain] = useState<string>('women');
   const [selectedSub, setSelectedSub] = useState<string>('All Women');

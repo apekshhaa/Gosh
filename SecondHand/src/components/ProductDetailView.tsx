@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ViewState, Product } from '../types';
-import { products } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Maximize2, X, Scale, ArrowLeft, Heart, ShoppingBag } from 'lucide-react';
 import { formatINR } from '../utils/currency';
@@ -13,6 +12,7 @@ interface ProductDetailViewProps {
   onAddToCart: (product: Product) => void;
   isWishlisted: boolean;
   onToggleWishlist: () => void;
+  products: Product[];
 }
 
 export default function ProductDetailView({
@@ -23,6 +23,7 @@ export default function ProductDetailView({
   onAddToCart,
   isWishlisted,
   onToggleWishlist,
+  products,
 }: ProductDetailViewProps) {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
@@ -85,7 +86,7 @@ export default function ProductDetailView({
             <div className="relative aspect-3/4 w-full overflow-hidden bg-[#FAFBF9] border border-luxury-border">
               <AnimatePresence mode="wait">
                 <motion.button key={activeSlide} type="button" onClick={() => setIsImageFullscreen(true)} aria-label={`View ${currentSlide.label} full screen`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="absolute inset-0 flex h-full w-full cursor-zoom-in items-center justify-center bg-[#f6f1e9]">
-                  <img src={currentSlide.src} alt={`${product.title} — ${currentSlide.label}`} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                  {currentSlide.src ? <img src={currentSlide.src} alt={`${product.title} — ${currentSlide.label}`} className="h-full w-full object-contain" referrerPolicy="no-referrer" /> : <span className="font-serif text-xl text-luxury-gray">GOSH</span>}
                   <span className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] uppercase tracking-wider text-luxury-charcoal"><Maximize2 className="h-3.5 w-3.5"/> View full size</span>
                 </motion.button>
               </AnimatePresence>

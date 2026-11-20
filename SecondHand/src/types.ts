@@ -7,12 +7,12 @@ export interface Product {
   discount?: string;
   image: string;
   images: string[];
-  category: 'womens' | 'mens' | 'children' | 'accessories' | 'outerwear' | 'knitwear';
+  category: string;
   subcategory: string;
-  size: 'XS' | 'S' | 'M' | 'L' | 'XL';
+  size: string;
   sizeLabel?: string;
   filterSize?: string;
-  condition: 'Pristine' | 'Excellent' | 'Very Good';
+  condition: string;
   conditionConfirmed?: boolean;
   conditionNote?: string;
   material: string;
@@ -26,7 +26,7 @@ export interface Product {
 export interface CartItem {
   product: Product;
   quantity: number;
-  selectedSize: 'XS' | 'S' | 'M' | 'L' | 'XL';
+  selectedSize: string;
 }
 
 export interface Filters {
@@ -37,4 +37,4 @@ export interface Filters {
   searchQuery: string;
 }
 
-export type ViewState = 'home' | 'shop' | 'womens' | 'steals' | 'new' | 'wishlist' | 'cart' | 'detail' | 'checkout' | 'account' | 'login' | 'register' | 'about' | 'tracking' | 'faq' | 'contact' | 'shipping' | 'returns' | 'privacy';
+export type ViewState = 'home' | 'shop' | 'womens' | 'steals' | 'new' | 'wishlist' | 'cart' | 'detail' | 'checkout' | 'account' | 'login' | 'register' | 'about' | 'seller' | 'admin' | 'orders' | 'tracking' | 'faq' | 'contact' | 'shipping' | 'returns' | 'privacy';
