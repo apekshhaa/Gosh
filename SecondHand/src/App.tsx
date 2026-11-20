@@ -9,11 +9,17 @@ import WomensView from './components/WomensView';
 import WishlistView from './components/WishlistView';
 import CartView from './components/CartView';
 import AboutView from './components/AboutView';
+import SellerStudioView from './components/SellerStudioView';
+import OrdersView from './components/OrdersView';
+import CheckoutView from './components/CheckoutView';
+import AdminDashboard from './components/AdminDashboard';
 import { products } from './data';
+import { getPublicProduct, getPublicProducts } from './api/products';
 import { motion, AnimatePresence } from 'motion/react';
 
-type Route = { view: ViewState; product?: Product; query?: string; category?: string; invalid?: boolean };
+type Route = { view: ViewState; product?: Product; productId?: string; query?: string; category?: string; invalid?: boolean };
 const PRODUCT_PATH = /^\/products\/([^/]+)\/?$/;
+const ORDER_PATH = /^\/orders\/([^/]+)\/?$/;
 
 function routeFromLocation(): Route {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -24,11 +30,17 @@ function routeFromLocation(): Route {
   if (path === '/women') return { view: 'womens' };
   if (path === '/wishlist') return { view: 'wishlist' };
   if (path === '/cart') return { view: 'cart' };
+  if (path === '/checkout') return { view: 'checkout' };
   if (path === '/about') return { view: 'about' };
+  if (path === '/seller') return { view: 'seller' };
+  if (path === '/admin') return { view: 'admin' };
+  if (path === '/orders') return { view: 'orders' };
+  const orderMatch = path.match(ORDER_PATH);
+  if (orderMatch) return { view: 'orders', productId: decodeURIComponent(orderMatch[1]) };
   const match = path.match(PRODUCT_PATH);
   if (match) {
     const product = products.find((item) => item.id === decodeURIComponent(match[1]));
-    return product ? { view: 'detail', product } : { view: 'detail', invalid: true };
+    return product ? { view: 'detail', product } : /^[a-f\d]{24}$/i.test(decodeURIComponent(match[1])) ? { view: 'detail', productId: decodeURIComponent(match[1]) } : { view: 'detail', invalid: true };
   }
   return { view: 'home', invalid: true };
 }
@@ -51,7 +63,7 @@ function routePath(view: ViewState, product: Product | null, query: string, cate
     return params.size ? `/shop?${params.toString()}` : '/shop';
   }
   const paths: Partial<Record<ViewState, string>> = {
-    home: '/', womens: '/women', wishlist: '/wishlist', cart: '/cart', about: '/about'
+    home: '/', womens: '/women', wishlist: '/wishlist', cart: '/cart', checkout: '/checkout', about: '/about', seller: '/seller', orders: '/orders', admin: '/admin'
   };
   return paths[view] || '/';
 }
@@ -60,6 +72,18 @@ export default function App() {
   const initialRoute = useMemo(routeFromLocation, []);
   const [currentView, setCurrentView] = useState<ViewState>(initialRoute.view);
   const [selectedProduct, setSelectedProductState] = useState<Product | null>(initialRoute.product || null);
+  const [detailProductId, setDetailProductId] = useState(initialRoute.productId || initialRoute.product?.id || '');
+  const [orderId, setOrderId] = useState(initialRoute.view === 'orders' ? initialRoute.productId : undefined);
+  const [detailLoading, setDetailLoading] = useState(Boolean(initialRoute.productId));
+  const [detailError, setDetailError] = useState('');
+  const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [apiState, setApiState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [retryProducts, setRetryProducts] = useState(0);
+  const [storageHydrated, setStorageHydrated] = useState(false);
+  const catalogProducts = useMemo(() => {
+    const ids = new Set(apiProducts.map((product) => product.id));
+    return [...apiProducts, ...products.filter((product) => !ids.has(product.id))];
+  }, [apiProducts]);
   const selectedProductRef = useRef<Product | null>(initialRoute.product || null);
   const [searchQuery, setSearchQuery] = useState(initialRoute.query || '');
   const queryRef = useRef(initialRoute.query || '');
@@ -93,6 +117,7 @@ export default function App() {
 
   const setSelectedProduct = useCallback((product: Product) => {
     selectedProductRef.current = product;
+    setDetailProductId(product.id);
     setSelectedProductState(product);
   }, []);
 
@@ -105,21 +130,26 @@ export default function App() {
       window.history.pushState({ gosh: true }, '', nextPath);
     }
     setCurrentView(view);
+    if (view === 'orders') setOrderId(undefined);
     setInvalidRoute(false);
     if (view !== 'detail') selectedProductRef.current = selectedProduct;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentView, selectedProduct]);
 
+  const openOrder = useCallback((id: string) => { setOrderId(id || undefined); const path = id ? `/orders/${encodeURIComponent(id)}` : '/orders'; if (window.location.pathname !== path) window.history.pushState({ gosh: true }, '', path); setCurrentView('orders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
+
   useEffect(() => {
     const syncRoute = () => {
       const route = routeFromLocation();
       setCurrentView(route.view);
+      setOrderId(route.view === 'orders' ? route.productId : undefined);
       setInvalidRoute(Boolean(route.invalid));
       queryRef.current = route.query || '';
       setSearchQuery(route.query || '');
       shopCategoryRef.current = route.category || 'All';
       setShopCategory(route.category || 'All');
       if (route.product) setSelectedProduct(route.product);
+      else if (route.productId) { setDetailProductId(route.productId); setSelectedProductState(null); }
       if (route.view === 'shop') {
         let savedScroll = 0;
         try { savedScroll = Number(window.sessionStorage.getItem('gosh-shop-scroll') || 0); } catch { /* Session storage may be unavailable. */ }
@@ -131,11 +161,58 @@ export default function App() {
   }, [setSelectedProduct]);
 
   useEffect(() => {
-    try { window.localStorage.setItem('gosh-cart', JSON.stringify(cart.map(({ product, selectedSize }) => ({ productId: product.id, selectedSize })))); } catch { /* Storage may be unavailable in private browsing. */ }
-  }, [cart]);
+    let cancelled = false;
+    setApiState('loading');
+    getPublicProducts().then((items) => {
+      if (cancelled) return;
+      setApiProducts(items);
+      setApiState('ready');
+    }).catch(() => { if (!cancelled) setApiState('error'); }).finally(() => { if (!cancelled) setStorageHydrated(true); });
+    return () => { cancelled = true; };
+  }, [retryProducts]);
+
   useEffect(() => {
+    const id = currentView === 'detail' ? detailProductId : '';
+    if (!/^[a-f\d]{24}$/i.test(id)) { setDetailLoading(false); return; }
+    let cancelled = false;
+    setDetailLoading(true);
+    setDetailError('');
+    getPublicProduct(id).then((product) => {
+      if (cancelled) return;
+      setSelectedProductState(product);
+      selectedProductRef.current = product;
+      setInvalidRoute(false);
+      setDetailLoading(false);
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      setDetailLoading(false);
+      setDetailError(error instanceof Error ? error.message : 'Product details are unavailable.');
+      if (!selectedProductRef.current) setInvalidRoute(true);
+    });
+    return () => { cancelled = true; };
+  }, [currentView, detailProductId]);
+
+  useEffect(() => {
+    if (apiState !== 'ready') return;
+    const savedWishlist = safeRead<string[]>('gosh-wishlist', []);
+    const wishlistItems = catalogProducts.filter((product) => savedWishlist.includes(product.id));
+    wishlistRef.current = wishlistItems; setWishlist(wishlistItems);
+    const savedCart = safeRead<Array<{ productId: string; selectedSize?: string }>>('gosh-cart', []);
+    const cartItems = savedCart.flatMap((entry) => {
+      const product = catalogProducts.find((item) => item.id === entry.productId);
+      return !product || product.isSoldOut || product.price <= 0 ? [] : [{ product, quantity: 1, selectedSize: entry.selectedSize || product.size }];
+    });
+    cartRef.current = cartItems; setCart(cartItems);
+  }, [apiState, catalogProducts]);
+
+  useEffect(() => {
+    if (!storageHydrated) return;
+    try { window.localStorage.setItem('gosh-cart', JSON.stringify(cart.map(({ product, selectedSize }) => ({ productId: product.id, selectedSize })))); } catch { /* Storage may be unavailable in private browsing. */ }
+  }, [cart, storageHydrated]);
+  useEffect(() => {
+    if (!storageHydrated) return;
     try { window.localStorage.setItem('gosh-wishlist', JSON.stringify(wishlist.map((product) => product.id))); } catch { /* Storage may be unavailable in private browsing. */ }
-  }, [wishlist]);
+  }, [wishlist, storageHydrated]);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     if (hasManualTheme) {
@@ -201,6 +278,7 @@ export default function App() {
     cartRef.current = nextCart;
     setCart(nextCart);
   };
+  const clearCart = () => { cartRef.current = []; setCart([]); };
   const toggleTheme = () => { setHasManualTheme(true); setTheme((value) => value === 'light' ? 'dark' : 'light'); };
 
   return (
@@ -223,13 +301,19 @@ export default function App() {
         ) : (
           <AnimatePresence mode="wait">
             <motion.div key={currentView} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-              {currentView === 'home' && <HomeView setView={setView} setSelectedProduct={setSelectedProduct} onSelectCategory={(category) => { if (category === 'Women') setView('womens'); else { shopCategoryRef.current = category; setShopCategory(category); setView('shop'); } }} />}
-              {currentView === 'shop' && <ShopView setView={setView} setSelectedProduct={setSelectedProduct} initialSearchQuery={searchQuery} initialCategory={shopCategory} clearSearchQuery={() => { onSearch(''); window.history.replaceState(window.history.state, '', routePath('shop', selectedProductRef.current, '', shopCategoryRef.current)); }} wishlist={wishlist} onToggleWishlist={toggleWishlist} />}
-              {currentView === 'womens' && <WomensView setView={setView} setSelectedProduct={setSelectedProduct} onToggleWishlist={toggleWishlist} wishlist={wishlist} />}
-              {currentView === 'detail' && selectedProduct && <ProductDetailView product={selectedProduct} setView={setView} setSelectedProduct={setSelectedProduct} onBack={() => window.history.state?.gosh ? window.history.back() : setView('shop')} onAddToCart={addToCart} isWishlisted={wishlist.some((item) => item.id === selectedProduct.id)} onToggleWishlist={() => toggleWishlist(selectedProduct)} />}
+              {currentView === 'home' && <HomeView products={catalogProducts} setView={setView} setSelectedProduct={setSelectedProduct} onSelectCategory={(category) => { if (category === 'Women') setView('womens'); else { shopCategoryRef.current = category; setShopCategory(category); setView('shop'); } }} />}
+              {currentView === 'shop' && <ShopView products={catalogProducts} dataState={apiState} onRetry={() => setRetryProducts((value) => value + 1)} setView={setView} setSelectedProduct={setSelectedProduct} initialSearchQuery={searchQuery} initialCategory={shopCategory} clearSearchQuery={() => { onSearch(''); window.history.replaceState(window.history.state, '', routePath('shop', selectedProductRef.current, '', shopCategoryRef.current)); }} wishlist={wishlist} onToggleWishlist={toggleWishlist} />}
+              {currentView === 'womens' && <WomensView products={catalogProducts} setView={setView} setSelectedProduct={setSelectedProduct} onToggleWishlist={toggleWishlist} wishlist={wishlist} />}
+              {currentView === 'detail' && selectedProduct && <ProductDetailView products={catalogProducts} product={selectedProduct} setView={setView} setSelectedProduct={setSelectedProduct} onBack={() => window.history.state?.gosh ? window.history.back() : setView('shop')} onAddToCart={addToCart} isWishlisted={wishlist.some((item) => item.id === selectedProduct.id)} onToggleWishlist={() => toggleWishlist(selectedProduct)} />}
+              {currentView === 'detail' && !selectedProduct && detailLoading && <p className="mx-auto max-w-7xl px-6 py-24 text-center text-sm text-luxury-gray" role="status">Loading this listing…</p>}
+              {currentView === 'detail' && detailError && selectedProduct && <p className="mx-auto max-w-7xl px-6 py-4 text-sm text-luxury-gray" role="status">Showing saved listing details; the latest listing could not be loaded.</p>}
               {currentView === 'wishlist' && <WishlistView wishlist={wishlist} setView={setView} setSelectedProduct={setSelectedProduct} onRemoveFromWishlist={(product) => toggleWishlist(product)} onMoveToBag={(product) => { if (product.isSoldOut || product.price <= 0) return; addToCart(product); setView('cart'); }} />}
               {currentView === 'cart' && <CartView cart={cart} setView={setView} setSelectedProduct={setSelectedProduct} onRemoveItem={(id) => removeFromCart(id)} />}
+              {currentView === 'checkout' && <CheckoutView cart={cart} setView={setView} setSelectedProduct={setSelectedProduct} onRemoveItem={removeFromCart} onOrderCreated={(id) => { clearCart(); openOrder(id); }} />}
               {currentView === 'about' && <AboutView setView={setView} />}
+              {currentView === 'seller' && <SellerStudioView setView={setView} />}
+              {currentView === 'admin' && <AdminDashboard setView={setView} />}
+              {currentView === 'orders' && <OrdersView orderId={orderId} setOrderId={openOrder} setView={setView} />}
             </motion.div>
           </AnimatePresence>
         )}

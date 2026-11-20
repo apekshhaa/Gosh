@@ -83,6 +83,12 @@ const skortImage = new URL('../assets/images/skort.png', import.meta.url).href;
 const skortDescriptionImage = new URL('../assets/images/skort_desc.png', import.meta.url).href;
 const purpleDressImage = new URL('../assets/images/purple_dress.png', import.meta.url).href;
 const purpleDressDescriptionImage = new URL('../assets/images/purple_dress_desc.png', import.meta.url).href;
+const pinkStripedDressImage = new URL('../assets/images/pink_striped_dress.png', import.meta.url).href;
+const pinkGinghamDressImage = new URL('../assets/images/pink_gingham_dress.png', import.meta.url).href;
+const creamFloralDressImage = new URL('../assets/images/cream_floral_dress.png', import.meta.url).href;
+const navyPolkaDressImage = new URL('../assets/images/navy_polka_dress.png', import.meta.url).href;
+const blushFloralWrapDressImage = new URL('../assets/images/blush_floral_wrap_dress.png', import.meta.url).href;
+const redBlueStripeDressImage = new URL('../assets/images/red_blue_stripe_dress.png', import.meta.url).href;
 const whiteTopImage = new URL('../assets/images/white_top.png', import.meta.url).href;
 const whiteTopDescriptionImage = new URL('../assets/images/white_top_desc.png', import.meta.url).href;
 
@@ -102,7 +108,7 @@ export const products: Product[] = [
     measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'green-top', title: 'Green Top', brand: 'GOSH finds', price: 300,
+    id: 'green-top', title: 'Green Top', brand: 'GOSH finds', price: 300, isSoldOut: true,
     image: greenTopImage, images: [greenTopImage, greenTopDescriptionImage],
     category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'Lovely condition overall', material: 'Add fabric details',
     description: 'A cream cropped top with a delicate green leafy print, softly puffed sleeves and a gathered front. Worn once.',
@@ -116,14 +122,14 @@ export const products: Product[] = [
     measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'brown-dress', title: 'Brown Dress', brand: 'NEWME', price: 600, originalPrice: 1600, discount: '-63%',
+    id: 'brown-dress', title: 'Brown Dress', brand: 'NEWME', price: 600, originalPrice: 1600, discount: '-63%', isSoldOut: true,
     image: brownDressImage, images: [brownDressImage, brownDressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A deep burgundy long-sleeved dress with an all-over lace pattern, crossover V-neck and gently flared skirt by NEWME.',
     measurements: '', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'floral-top', title: 'Floral Tube Top', brand: 'GOSH finds', price: 300,
+    id: 'floral-top', title: 'Floral Tube Top', brand: 'GOSH finds', price: 300, isSoldOut: true,
     image: floralTubeImage, images: [floralTubeImage, floralTopDescriptionImage],
     category: 'womens', subcategory: 'Tops', size: 'S', condition: 'Very Good', conditionConfirmed: true, conditionNote: 'A very nice pre-loved piece', material: 'Add fabric details',
     description: 'A strapless ruched top in a bright abstract floral print with pink, blue, purple, green and yellow tones.',
@@ -235,7 +241,7 @@ export const products: Product[] = [
     measurements: 'Size M; suitable for around 16 years old. ₹250 each when bought separately, or ₹600 for all three as a set.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'floral-dress', title: 'Floral Dress', brand: 'GOSH finds', price: 500,
+    id: 'floral-dress', title: 'Floral Dress', brand: 'GOSH finds', price: 500, isSoldOut: true,
     image: floralDressImage, images: [floralDressImage, floralDressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'M', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A black dress with a pink floral print, wrap-style V-neck, tie waist, flared cuffs and a ruffled hem.',
@@ -354,7 +360,7 @@ export const products: Product[] = [
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'jaanu6-striped-shirt-dress', title: 'Striped Shirt Dress', brand: 'GOSH finds', price: 400,
+    id: 'jaanu6-striped-shirt-dress', title: 'Striped Shirt Dress', brand: 'GOSH finds', price: 400, isSoldOut: true,
     image: jaanu6DressImage, images: [jaanu6DressImage, jaanu6DressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A black-and-white vertically striped shirt dress with three-quarter sleeves, buttons and a tie waist.',
@@ -382,7 +388,7 @@ export const products: Product[] = [
     measurements: 'Size XS.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'bow-print-bodycon-dress', title: 'Bow Print Bodycon Dress', brand: 'GOSH finds', price: 450,
+    id: 'bow-print-bodycon-dress', title: 'Bow Print Bodycon Dress', brand: 'GOSH finds', price: 450, isSoldOut: true,
     image: bowDressImage, images: [bowDressImage, bowDressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A black bow-print bodycon mini dress with a ruched bodice, off-shoulder neckline, sheer long sleeves and flared cuffs.',
@@ -417,10 +423,52 @@ export const products: Product[] = [
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   },
   {
-    id: 'sky-blue-shirt-dress', title: 'Sky Blue Shirt Dress', brand: 'GOSH finds', price: 400,
+    id: 'sky-blue-shirt-dress', title: 'Sky Blue Shirt Dress', brand: 'GOSH finds', price: 400, isSoldOut: true,
     image: purpleDressImage, images: [purpleDressImage, purpleDressDescriptionImage],
     category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Add fabric details',
     description: 'A sky-blue button-down shirt dress with delicate dotted stripes, a classic collar and a softly defined waist.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'pink-striped-shirt-dress', title: 'Pink Striped Shirt Dress', brand: 'GOSH finds', price: 399,
+    image: pinkStripedDressImage, images: [pinkStripedDressImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Cotton blend',
+    description: 'A pink striped shirt dress with a classic button placket, soft puff sleeves and a gently flared skirt.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'pink-gingham-shirt-dress', title: 'Pink Gingham Shirt Dress', brand: 'GOSH finds', price: 399,
+    image: pinkGinghamDressImage, images: [pinkGinghamDressImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Cotton blend',
+    description: 'A blush pink gingham shirt dress with a tie waist, button-front closure and an easy A-line silhouette.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'cream-floral-sundress', title: 'Cream Floral Sundress', brand: 'GOSH finds', price: 399,
+    image: creamFloralDressImage, images: [creamFloralDressImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Cotton blend',
+    description: 'A cream floral sundress with a fitted bodice, small decorative buttons and a full, flared skirt.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'navy-polka-shirt-dress', title: 'Navy Polka Dot Dress', brand: 'GOSH finds', price: 399,
+    image: navyPolkaDressImage, images: [navyPolkaDressImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Cotton blend',
+    description: 'A navy blue polka-dot dress with puff sleeves, a fitted bodice and a tiered flared skirt.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'blush-floral-wrap-dress', title: 'Blush Floral Wrap Dress', brand: 'GOSH finds', price: 399,
+    image: blushFloralWrapDressImage, images: [blushFloralWrapDressImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Cotton blend',
+    description: 'A blush floral wrap dress with flutter sleeves, a V-neckline and a soft A-line silhouette.',
+    measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
+  },
+  {
+    id: 'red-blue-striped-dress', title: 'Red Blue Striped Dress', brand: 'GOSH finds', price: 399,
+    image: redBlueStripeDressImage, images: [redBlueStripeDressImage],
+    category: 'womens', subcategory: 'Dresses', size: 'S', sizeLabel: 'S', filterSize: 'S', condition: 'Very Good', conditionConfirmed: false, material: 'Cotton blend',
+    description: 'A bright striped midi dress with a fitted bodice, flutter sleeves and a flared skirt in red, white and navy.',
     measurements: 'Size S.', shipping: 'Shipping is charged separately. Free shipping on orders over ₹900.'
   }
 ];

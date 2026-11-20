@@ -65,6 +65,7 @@ export default function Header({ currentView, setView, onSearch, searchQuery, ca
           <button onClick={() => go('womens')} aria-current={currentView === 'womens' ? 'page' : undefined} className={`min-h-8 text-[11px] font-semibold uppercase tracking-[0.15em] ${currentView === 'womens' ? 'text-luxury-charcoal underline underline-offset-4' : 'text-luxury-gray'}`}>Women</button>
           <button onClick={() => go('about')} aria-current={currentView === 'about' ? 'page' : undefined} className={`min-h-8 text-[11px] font-semibold uppercase tracking-[0.15em] ${currentView === 'about' ? 'text-luxury-charcoal underline underline-offset-4' : 'text-luxury-gray'}`}>About GOSH</button>
           <button onClick={() => go('wishlist')} aria-current={currentView === 'wishlist' ? 'page' : undefined} className="min-h-8 text-[11px] font-semibold uppercase tracking-[0.15em] text-luxury-gray">Wishlist</button>
+          <button onClick={() => go('orders')} aria-current={currentView === 'orders' ? 'page' : undefined} className="min-h-8 text-[11px] font-semibold uppercase tracking-[0.15em] text-luxury-gray">Orders</button>
         </nav>
       </div>
     </header>
@@ -87,7 +88,7 @@ export default function Header({ currentView, setView, onSearch, searchQuery, ca
         <motion.aside role="dialog" aria-modal="true" aria-label="Navigation menu" className="fixed inset-y-0 left-0 z-50 w-[min(85vw,22rem)] overflow-y-auto bg-luxury-sand p-6 shadow-2xl md:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}>
           <div className="flex items-center justify-between border-b border-luxury-border pb-4"><h2 className="font-serif text-xl">GOSH</h2><button onClick={() => setIsMobileMenuOpen(false)} className="inline-flex h-11 w-11 items-center justify-center" aria-label="Close menu"><X className="h-5 w-5" /></button></div>
           <nav aria-label="Mobile navigation" className="mt-4 flex flex-col divide-y divide-luxury-border">
-            {([['home', 'Home'], ['shop', 'Shop all'], ['womens', 'Women'], ['wishlist', `Wishlist (${wishlistCount})`], ['cart', `Shopping bag (${cartCount})`], ['about', 'About GOSH']] as [ViewState, string][]).map(([view, label]) => <button key={view} onClick={() => go(view)} className="min-h-12 py-3 text-left text-sm uppercase tracking-wider">{label}<ArrowRight className="float-right h-4 w-4" /></button>)}
+            {([['home', 'Home'], ['shop', 'Shop all'], ['womens', 'Women'], ['wishlist', `Wishlist (${wishlistCount})`], ['cart', `Shopping bag (${cartCount})`], ['orders', 'My orders'], ['about', 'About GOSH']] as [ViewState, string][]).map(([view, label]) => <button key={view} onClick={() => go(view)} className="min-h-12 py-3 text-left text-sm uppercase tracking-wider">{label}<ArrowRight className="float-right h-4 w-4" /></button>)}
           </nav>
         </motion.aside>
       </>}
