@@ -24,7 +24,10 @@ export default function HomeView({ setView, setSelectedProduct, onSelectCategory
         <p className="mb-4 text-xs uppercase tracking-[0.24em]">A little shop for pre-loved clothes</p>
         <h2 className="max-w-2xl font-serif text-5xl leading-tight sm:text-6xl">Good clothes deserve another outing.</h2>
         <p className="mt-5 max-w-lg text-sm leading-6 text-white/85">Browse pre-loved skirts, tops, dresses and men’s pieces. Free shipping on orders over ₹900.</p>
-        <button onClick={() => setView('shop')} className="mt-8 inline-flex items-center gap-3 bg-[#f8f2e9] px-6 py-4 text-xs font-semibold uppercase tracking-widest text-[#302820]">Browse the collection <ArrowRight className="h-4 w-4" /></button>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <button onClick={() => setView('shop')} className="inline-flex min-h-12 items-center gap-3 bg-[#f8f2e9] px-6 py-4 text-xs font-semibold uppercase tracking-widest text-[#302820]">Browse the collection <ArrowRight className="h-4 w-4" /></button>
+          <button onClick={() => setView('seller')} className="inline-flex min-h-12 items-center gap-3 border border-white/70 bg-black/10 px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-[#302820]">Sell with GOSH <ArrowRight className="h-4 w-4" /></button>
+        </div>
       </div>
     </section>
     <section className="mx-auto max-w-7xl px-6 py-16 md:px-12 md:py-20">

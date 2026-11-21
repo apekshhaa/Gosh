@@ -286,6 +286,7 @@ export default function App() {
       <a href="#main-content" className="sr-only fixed left-3 top-3 z-[100] bg-luxury-sand px-4 py-3 text-sm focus:not-sr-only">Skip to content</a>
       <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 bg-[#57443b] px-4 py-2 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white">
         <span>Shipping charged separately · Free shipping on orders over ₹900</span><span aria-hidden="true">·</span>
+        <button onClick={() => setView('seller')} className="min-h-6 font-semibold underline underline-offset-2">Sell with GOSH</button><span aria-hidden="true">·</span>
         <a href="https://wa.me/917338546697" target="_blank" rel="noreferrer" className="min-h-6 underline underline-offset-2">WhatsApp 7338546697</a>
       </div>
       <Header currentView={currentView} setView={setView} onSearch={(query) => { onSearch(query); setView('shop'); }} searchQuery={searchQuery} cartCount={cart.length} wishlistCount={wishlist.length} theme={theme} onToggleTheme={toggleTheme} />

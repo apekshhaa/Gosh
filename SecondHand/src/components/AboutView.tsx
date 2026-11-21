@@ -30,8 +30,7 @@ export default function AboutView({ setView }: AboutViewProps) {
               Explore GOSH Archives
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
-            <a href="https://wa.me/917338546697?text=Hi%20GOSH%2C%20I%E2%80%99d%20like%20to%20list%20clothes%20for%20sale." target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center rounded-full border border-luxury-charcoal px-6 py-3 text-xs font-semibold tracking-widest text-luxury-charcoal uppercase transition-colors hover:bg-[#18231a] hover:text-white">Sell with GOSH</a>
-            <button onClick={() => setView('seller')} className="mt-3 ml-2 inline-flex min-h-11 items-center rounded-full border border-luxury-charcoal px-6 py-3 text-xs font-semibold tracking-widest text-luxury-charcoal uppercase transition-colors hover:bg-[#18231a] hover:text-white">Seller workspace</button>
+            <button onClick={() => setView('seller')} className="mt-3 inline-flex min-h-11 items-center rounded-full border border-luxury-charcoal px-6 py-3 text-xs font-semibold tracking-widest text-luxury-charcoal uppercase transition-colors hover:bg-[#18231a] hover:text-white">Sell with GOSH</button>
           </div>
           
           <div className="md:col-span-6 md:col-start-7">
