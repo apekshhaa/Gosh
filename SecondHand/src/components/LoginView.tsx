@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ViewState } from '../types';
 import { editorialImages } from '../images';
+import { apiRequest, ApiError } from '../api/client';
 
 interface LoginViewProps {
   setView: (view: ViewState) => void;
@@ -11,32 +12,33 @@ export default function LoginView({ setView, onLoginSuccess }: LoginViewProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showForgotHint, setShowForgotHint] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
-
-    // Use default mock credentials name if Eleanor is signing in, or auto-split from the email prefix
-    const mockName = email.toLowerCase().includes('eleanor') ? 'Eleanor Vance' : email.split('@')[0].split('.').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-
-    if (onLoginSuccess) {
-      onLoginSuccess({
-        name: mockName || 'Eleanor Vance',
-        email: email
-      });
+    if (!email.trim() || !password) {
+      setError(!email.trim() ? 'Enter your email address.' : 'Enter your password.');
+      return;
     }
-
-    setView('home');
+    setBusy(true);
+    setError('');
+    try {
+      const result = await apiRequest<{ user: { name: string; email: string } }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      if (onLoginSuccess) onLoginSuccess(result.user);
+      setView('home');
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : 'Sign-in could not be completed.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleThirdPartySignIn = (provider: string) => {
-    if (onLoginSuccess) {
-      onLoginSuccess({
-        name: 'Eleanor Vance',
-        email: 'eleanor.v@example.com'
-      });
-    }
-    setView('home');
+    setError(`${provider} sign-in is not configured.`);
   };
 
   return (
@@ -56,6 +58,7 @@ export default function LoginView({ setView, onLoginSuccess }: LoginViewProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {error && <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
               <div>
                 <label className="block font-sans text-[10px] font-bold text-luxury-gray uppercase tracking-widest mb-2" htmlFor="email">
                   Email Address
@@ -104,10 +107,11 @@ export default function LoginView({ setView, onLoginSuccess }: LoginViewProps) {
 
               <button 
                 id="login-submit-btn"
-                className="w-full bg-[#1C1C1C] text-white font-sans text-xs font-bold py-4 rounded-lg hover:bg-[#333333] active:scale-[0.99] transition-all uppercase tracking-widest mt-6" 
+                disabled={busy}
+                className="w-full bg-[#1C1C1C] text-white font-sans text-xs font-bold py-4 rounded-lg hover:bg-[#333333] active:scale-[0.99] transition-all uppercase tracking-widest mt-6 disabled:opacity-50"
                 type="submit"
               >
-                Sign In
+                {busy ? 'Signing in…' : 'Sign In'}
               </button>
             </form>
 
@@ -151,7 +155,7 @@ export default function LoginView({ setView, onLoginSuccess }: LoginViewProps) {
                 <button 
                   id="login-to-register-btn"
                   type="button"
-                  onClick={() => setView('register')}
+                  onClick={() => setView('seller')}
                   className="text-[#1C1C1C] font-semibold hover:underline underline-offset-4 transition-colors"
                 >
                   Create an account

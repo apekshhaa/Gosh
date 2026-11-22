@@ -25,6 +25,7 @@ describe('admin dashboard APIs', () => {
     const users = await request(app).get('/api/v1/admin/users').set('Cookie', admin.cookie);
     expect(overview.status).toBe(200);
     expect(overview.body.paymentProvider).toBe('disabled');
+    expect(overview.body.finance).toMatchObject({ commissionRateBps: 500, sellerShareRateBps: 9500, buyerMarketplaceFeePaise: 0 });
     expect(users.status).toBe(200);
     expect(users.body.users[0]).not.toHaveProperty('passwordHash');
     expect(users.body.users[0]).not.toHaveProperty('sessionVersion');

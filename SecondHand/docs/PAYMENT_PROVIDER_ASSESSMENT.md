@@ -18,7 +18,7 @@ Cashfree's vendor API requires vendor KYC and settlement details (including bank
 
 The existence of a marketplace product does not mean GOSH is approved to use it. Cashfree must review GOSH's legal entity, marketplace model, second-hand clothing category, customer/seller contracts, refund/return policy, seller KYC process, money flow, commission, and settlement schedule. Confirm in writing whether the intended funds flow and any deferral until delivery/return-window expiry are available to GOSH. This recommendation does not call the arrangement escrow and does not assume GOSH may hold customer funds. Review the structure with payments counsel and the provider before accepting live funds.
 
-Provider fees are borne by the platform in this proposed accounting policy unless a signed provider agreement and seller terms explicitly establish another treatment. A payment-gateway fee or its GST must not silently reduce the seller's 80% share.
+Provider fees are borne by the platform in this proposed accounting policy unless a signed provider agreement and seller terms explicitly establish another treatment. A payment-gateway fee or its GST must not silently reduce the seller's 95% share; the 5% marketplace commission is charged only to the seller against the discounted product subtotal, and buyers pay no marketplace commission.
 
 ## Sandbox path
 

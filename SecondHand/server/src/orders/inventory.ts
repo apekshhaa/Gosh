@@ -105,7 +105,7 @@ async function confirmProviderPayment(orderId: string, attemptId: string, paymen
     await Order.updateOne({ _id: order._id, paymentStatus: { $nin: ['refunded', 'partially_refunded'] } }, { $set: { paymentStatus: 'paid' } }, { session });
     const eventId = `cashfree-payment:${payment.providerPaymentId}`;
     if (!await FinancialEvent.exists({ provider: 'cashfree', providerEventId: eventId }).session(session)) {
-      await FinancialEvent.create([{ provider: 'cashfree', providerEventId: eventId, kind: 'payment_captured', order: order._id, paymentAttempt: attempt._id, seller: order.seller, currency: 'INR', amountPaise: payment.amountPaise, platformCommissionPaise: order.platformCommissionPaise, sellerSharePaise: order.sellerSharePaise, providerReference: payment.providerPaymentId, occurredAt: payment.occurredAt && !Number.isNaN(payment.occurredAt.getTime()) ? payment.occurredAt : now }], { session });
+      await FinancialEvent.create([{ provider: 'cashfree', providerEventId: eventId, kind: 'payment_captured', order: order._id, paymentAttempt: attempt._id, seller: order.seller, currency: 'INR', amountPaise: payment.amountPaise, sellerCommissionPaise: order.sellerCommissionPaise ?? order.platformCommissionPaise, buyerMarketplaceFeePaise: order.buyerMarketplaceFeePaise ?? 0, platformCommissionPaise: order.platformCommissionPaise, sellerSharePaise: order.sellerSharePaise, providerReference: payment.providerPaymentId, occurredAt: payment.occurredAt && !Number.isNaN(payment.occurredAt.getTime()) ? payment.occurredAt : now }], { session });
     }
   });
 }

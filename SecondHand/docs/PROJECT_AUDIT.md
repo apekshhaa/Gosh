@@ -1,7 +1,7 @@
 # GOSH Marketplace Project Audit
 
-Audit date: 2026-11-18
-Branch: `feature/marketplace-foundation`
+Audit date: 2026-11-22
+Branch: `feature/seller-only-5-percent-commission`
 Scope: implementation and configuration currently present in the worktree
 
 ## Executive summary
@@ -162,15 +162,15 @@ No `npm audit fix`, `npm audit fix --force`, live payment setting, or major depe
 
 | Feature | Status | Evidence |
 |---|---|---|
-| Server-side price calculation | **IMPLEMENTED BUT UNVERIFIED** | `server/src/routes/orders.ts` reads prices from approved products; order tests are blocked by topology |
-| Immutable order item/price snapshots | **IMPLEMENTED BUT UNVERIFIED** | Immutable fields in `server/src/models/Order.ts` |
-| Single-seller restriction and self-purchase protection | **IMPLEMENTED BUT UNVERIFIED** | `server/src/routes/orders.ts`; order tests are blocked by topology |
-| Idempotent order creation | **IMPLEMENTED BUT UNVERIFIED** | Unique buyer/key index, request hash, and transaction logic in `server/src/routes/orders.ts` |
-| Atomic inventory decrement | **IMPLEMENTED BUT UNVERIFIED** | Conditional `$inc` inside `inTransaction` in `server/src/routes/orders.ts` |
-| Reservation expiry and stock recovery | **IMPLEMENTED BUT UNVERIFIED** | `server/src/orders/inventory.ts`, `server/src/workers/inventoryRecovery.ts`; requires replica-set transactions |
-| Buyer cancellation | **IMPLEMENTED BUT UNVERIFIED** | `POST /api/v1/orders/:id/cancel` and guarded restoration in `server/src/routes/orders.ts` / `server/src/orders/inventory.ts` |
-| Order status transitions | **IMPLEMENTED BUT UNVERIFIED** | Seller/admin guarded transitions in `server/src/routes/orders.ts` |
-| Transaction-based order creation | **BLOCKED** | `assertReplicaSetTransactions()` intentionally returns 503 for standalone MongoDB |
+| Server-side price calculation | **COMPLETE AND VERIFIED** | `server/src/routes/orders.ts` reads prices from approved products; order tests run on an ephemeral replica set |
+| Immutable order item/price snapshots | **COMPLETE AND VERIFIED** | Immutable fields in `server/src/models/Order.ts`; historical commission snapshots remain untouched |
+| Single-seller restriction and self-purchase protection | **COMPLETE AND VERIFIED** | `server/src/routes/orders.ts`; order tests pass on replica-set infrastructure |
+| Idempotent order creation | **COMPLETE AND VERIFIED** | Unique buyer/key index, request hash, and transaction logic in `server/src/routes/orders.ts` |
+| Atomic inventory decrement | **COMPLETE AND VERIFIED** | Conditional `$inc` inside `inTransaction` in `server/src/routes/orders.ts` |
+| Reservation expiry and stock recovery | **IMPLEMENTED AND TESTED** | `server/src/orders/inventory.ts`, `server/src/workers/inventoryRecovery.ts`; replica-set tests cover recovery |
+| Buyer cancellation | **IMPLEMENTED AND TESTED** | `POST /api/v1/orders/:id/cancel` and guarded restoration in `server/src/routes/orders.ts` / `server/src/orders/inventory.ts` |
+| Order status transitions | **IMPLEMENTED AND TESTED** | Seller/admin guarded transitions in `server/src/routes/orders.ts` |
+| Transaction-based order creation | **COMPLETE AND VERIFIED** | Replica-set test environment passes transaction-backed order creation; standalone MongoDB fails closed with HTTP 503 |
 | Reservation expiry job in production | **BLOCKED** | Worker disables itself after detecting no replica set |
 
 ### Payments and financial operations
@@ -182,19 +182,21 @@ No `npm audit fix`, `npm audit fix --force`, live payment setting, or major depe
 | Cashfree server-side payment verification | **IMPLEMENTED BUT UNVERIFIED** | Provider fetch methods and webhook route |
 | Webhook HMAC verification and raw-body handling | **IMPLEMENTED BUT UNVERIFIED** | `server/src/payments/cashfreeWebhook.ts`, `server/src/routes/payments.ts`; tests currently verify forged/mismatched requests fail closed |
 | Duplicate webhook event handling | **IMPLEMENTED BUT UNVERIFIED** | `PaymentEvent` unique provider event key and transaction processing |
-| 20% platform / 80% seller commission calculation | **COMPLETE AND VERIFIED** | `server/src/payments/commission.ts`; payment tests cover rounding and discounts |
+| 5% seller-only / 95% seller earnings commission calculation | **COMPLETE AND VERIFIED** | `server/src/payments/commission.ts`; tests cover integer paise, half-up rounding, discounts, and zero buyer fee |
 | Refund initiation and verification | **NOT IMPLEMENTED** | `CashfreeSandboxProvider.createRefund()` intentionally throws |
 | Settlement events and seller payouts | **NOT IMPLEMENTED** | Financial event enum has settlement types, but no provider ingestion or payout flow exists |
 | Financial reconciliation | **PARTIALLY IMPLEMENTED** | Captured-payment aggregation exists; settlement/refund/provider-fee reconciliation does not |
 | Live payments | **BLOCKED BY DESIGN** | `PAYMENT_PROVIDER=disabled` and sandbox checks are required; no live endpoint is exposed |
+
+The current marketplace commission policy is 5% of the discounted product subtotal, charged entirely to the seller, with 95% seller earnings and a 0% buyer marketplace fee. Shipping, taxes, and separately calculated charges are excluded from the commission basis. New orders store `commissionRateBps: 500`, the immutable commission basis and amounts, and the zero buyer fee. Existing orders keep their original immutable snapshots, including historical 20%/80% records; dashboard and reconciliation views identify snapshot values rather than silently rewriting history.
 
 ### Testing and deployment
 
 | Feature | Status | Evidence |
 |---|---|---|
 | Backend auth/product/payment/inventory tests | **COMPLETE AND VERIFIED** | 29 tests pass |
-| Backend order tests | **BLOCKED** | 5 failures, all caused by standalone transaction unavailability |
-| Concurrency inventory verification | **BLOCKED** | Test exists in `server/test/orders.test.ts`, but cannot execute past transaction gate |
+| Backend order tests | **PASS** | Replica-set Vitest coverage passes for order creation and idempotency |
+| Concurrency inventory verification | **PASS** | Inventory concurrency tests execute on the ephemeral replica-set test environment |
 | Frontend API tests | **COMPLETE AND VERIFIED** | Included Vitest tests pass |
 | Frontend component/browser tests | **NOT IMPLEMENTED** | No configured suite |
 | Production build/type checking | **COMPLETE AND VERIFIED** | Frontend build and root type check pass; backend build passes |
@@ -220,13 +222,15 @@ No Atlas connection was attempted because credentials, network access, and appro
 ## Bugs, risks, and technical debt
 
 1. **Order test environment mismatch:** the order suite now has local in-memory replica-set coverage, but the configured local database remains standalone. Atlas/replica-set verification is still needed for deployment parity.
-2. **Checkout integration gap:** the frontend cart does not call `POST /api/v1/orders`; it opens WhatsApp and does not reserve inventory. This is a product-flow gap, not just a UI issue.
-3. **Payment lifecycle gap:** refunds, settlement callbacks, provider fee accounting, and seller payout onboarding are absent. The provider adapter is sandbox-only and intentionally fails closed.
-4. **Image storage is not production-ready:** uploads are local filesystem files and are disabled in production. There is no durable/object storage, malware scanning, lifecycle cleanup, or orphan cleanup.
-5. **Application approval is multi-step without a transaction:** admin approval updates the seller profile and user role separately. The code compensates for some races, but this should be made transactional on a replica set.
-6. **No account verification/recovery:** email/phone verification and password reset are absent for a production marketplace.
-7. **Frontend API resilience:** the client has no request timeout/abort policy and no centralized auth/session state; several views make unbounded `limit=100` requests.
-8. **Operational visibility:** logs are partly structured but there is no durable audit/event sink or alerting around failed payment verification, recovery blockage, or reconciliation mismatches.
+2. **Repeatable browser/component checkout coverage:** checkout now calls `POST /api/v1/orders`, reserves inventory, and creates a backend unpaid order. Interactive browser verification is documented, but a repeatable frontend Playwright/component suite is not yet configured.
+3. **Delivery and settlement implementation is development-only:** sellers can submit shipments, buyers can record acknowledgements, couriers/admins can provide trusted verification, and a unique payout ledger is persisted. Payout execution remains disabled and no money is transferred.
+4. **Payment lifecycle gap:** refunds, settlement callbacks, provider fee accounting, and seller payout onboarding are absent. The provider adapter is sandbox-only and intentionally fails closed.
+5. **Returns and recovery are incomplete:** disputes block payout eligibility, but post-payout refunds and financial recovery obligations are not fully implemented.
+6. **Image storage is not production-ready:** uploads are local filesystem files and are disabled in production. There is no durable/object storage, malware scanning, lifecycle cleanup, or orphan cleanup.
+7. **Application approval is multi-step without a transaction:** admin approval updates the seller profile and user role separately. The code compensates for some races, but this should be made transactional on a replica set.
+8. **No account verification/recovery:** email/phone verification and password reset are absent for a production marketplace.
+9. **Frontend API resilience:** the client has no request timeout/abort policy and no centralized auth/session state; several views make unbounded `limit=100` requests.
+10. **Operational visibility:** logs are partly structured but there is no durable audit/event sink or alerting around failed payment verification, recovery blockage, or reconciliation mismatches.
 
 ## Security assessment
 
@@ -241,9 +245,15 @@ Remaining security/compliance work includes production secret management and rot
 3. Finish and test Cashfree sandbox flows only after valid sandbox credentials, webhook reachability, and provider approval are available; keep `PAYMENT_PROVIDER=disabled` until then.
 4. Implement refund and settlement event contracts, idempotency, ledger/reconciliation rules, and admin oversight.
 5. Replace local image storage with a reviewed production object-storage provider and cleanup policy.
-6. Add frontend checkout/auth/admin surfaces and browser/component tests.
+6. Add repeatable frontend browser/component tests for checkout, auth, seller, and admin surfaces.
 7. Complete production deployment, secret management, observability, backups, retention, and compliance review.
 
 ## Audit conclusion
 
-The current branch is a meaningful, security-oriented marketplace foundation, not a production-ready marketplace. The failed order tests accurately expose an infrastructure blocker. The safe next action is to supply a replica-set test environment and verify the existing transaction implementation; payment and production-storage work must remain blocked until their required external approvals and credentials exist.
+The current branch is a meaningful, security-oriented marketplace foundation, not a production-ready marketplace. New orders use a 5% seller-only commission based on the discounted product subtotal, with 95% seller earnings and a zero buyer marketplace fee. Shipping and taxes do not increase the commission. Historical order and financial-event snapshots retain their original commission rates and amounts. The safe next action is deployment verification of the existing replica-set transaction implementation; live payment, settlement, and production-storage work must remain blocked until their required external approvals and credentials exist.
+
+## Delivery verification and payout ledger security audit
+
+Courier delivery webhooks use the exact raw request body, a configured HMAC secret, timing-safe comparison, a five-minute replay window, and a unique event-ID ledger. Tracking IDs must match the order shipment and cancelled, refunded or disputed orders cannot be verified. Buyer acknowledgement requires authentication, ownership, confirmed payment, and matching shipment tracking, but is stored separately and never changes trusted verification status. Concurrent eligibility requests use database uniqueness and are re-evaluated against the current order state. Payout records preserve immutable financial snapshots and completed payouts cannot be changed by disabled-provider retry actions.
+
+Post-payout refunds are represented as separate accounting adjustments and recovery obligations; this is accounting-only and does not execute a provider refund or recover money. Refund/provider settlement automation and real payout-provider confirmation remain unimplemented. Buyer acknowledgement is not trusted verification and never makes a payout eligible; payout remains disabled.

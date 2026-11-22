@@ -13,6 +13,7 @@ import SellerStudioView from './components/SellerStudioView';
 import OrdersView from './components/OrdersView';
 import CheckoutView from './components/CheckoutView';
 import AdminDashboard from './components/AdminDashboard';
+import LoginView from './components/LoginView';
 import { products } from './data';
 import { getPublicProduct, getPublicProducts } from './api/products';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,6 +35,7 @@ function routeFromLocation(): Route {
   if (path === '/about') return { view: 'about' };
   if (path === '/seller') return { view: 'seller' };
   if (path === '/admin') return { view: 'admin' };
+  if (path === '/login') return { view: 'login' };
   if (path === '/orders') return { view: 'orders' };
   const orderMatch = path.match(ORDER_PATH);
   if (orderMatch) return { view: 'orders', productId: decodeURIComponent(orderMatch[1]) };
@@ -63,7 +65,7 @@ function routePath(view: ViewState, product: Product | null, query: string, cate
     return params.size ? `/shop?${params.toString()}` : '/shop';
   }
   const paths: Partial<Record<ViewState, string>> = {
-    home: '/', womens: '/women', wishlist: '/wishlist', cart: '/cart', checkout: '/checkout', about: '/about', seller: '/seller', orders: '/orders', admin: '/admin'
+    home: '/', womens: '/women', wishlist: '/wishlist', cart: '/cart', checkout: '/checkout', about: '/about', seller: '/seller', orders: '/orders', admin: '/admin', login: '/login'
   };
   return paths[view] || '/';
 }
@@ -311,6 +313,7 @@ export default function App() {
               {currentView === 'wishlist' && <WishlistView wishlist={wishlist} setView={setView} setSelectedProduct={setSelectedProduct} onRemoveFromWishlist={(product) => toggleWishlist(product)} onMoveToBag={(product) => { if (product.isSoldOut || product.price <= 0) return; addToCart(product); setView('cart'); }} />}
               {currentView === 'cart' && <CartView cart={cart} setView={setView} setSelectedProduct={setSelectedProduct} onRemoveItem={(id) => removeFromCart(id)} />}
               {currentView === 'checkout' && <CheckoutView cart={cart} setView={setView} setSelectedProduct={setSelectedProduct} onRemoveItem={removeFromCart} onOrderCreated={(id) => { clearCart(); openOrder(id); }} />}
+              {currentView === 'login' && <LoginView setView={setView} />}
               {currentView === 'about' && <AboutView setView={setView} />}
               {currentView === 'seller' && <SellerStudioView setView={setView} />}
               {currentView === 'admin' && <AdminDashboard setView={setView} />}

@@ -9,6 +9,14 @@ import { Product } from '../models/Product.js';
 import { FinancialEvent } from '../models/FinancialEvent.js';
 import { Order } from '../models/Order.js';
 import { PaymentAttempt } from '../models/PaymentAttempt.js';
+import { SELLER_COMMISSION_BPS, SELLER_SHARE_BPS, BUYER_MARKETPLACE_FEE_BPS } from '../payments/commission.js';
+import { Shipment } from '../models/Shipment.js';
+import { DeliveryVerification } from '../models/DeliveryVerification.js';
+import { Payout } from '../models/Payout.js';
+import { ensurePayoutRecord, disabledPayoutResult } from '../payouts/ledger.js';
+import { PayoutAdjustment } from '../models/PayoutAdjustment.js';
+import { inTransaction } from '../orders/inventory.js';
+import { BuyerDeliveryAcknowledgement } from '../models/BuyerDeliveryAcknowledgement.js';
 
 export const adminRouter = Router();
 const adminOnly = [requireAuth, requireRole('admin')];
@@ -26,6 +34,9 @@ const moderationReasonSchema = z.object({ reason: z.string().trim().min(5).max(1
 const reconciliationSchema = z.object({ from: z.string().datetime({ offset: true }).optional(), to: z.string().datetime({ offset: true }).optional(), page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(100).default(25) });
 const userListSchema = z.object({ role: z.enum(['buyer', 'seller', 'admin']).optional(), status: z.enum(['active', 'suspended', 'closed']).optional(), page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(100).default(25) });
 const suspensionSchema = z.object({ reason: z.string().trim().min(5).max(1000) }).strict();
+const deliveryVerifySchema = z.object({ trackingReference: z.string().trim().min(3).max(200), evidence: z.string().trim().min(5).max(1000), reason: z.string().trim().min(5).max(1000) }).strict();
+const disputeSchema = z.object({ status: z.enum(['open', 'resolved']), reason: z.string().trim().min(5).max(1000) }).strict();
+const refundSchema = z.object({ kind: z.enum(['refund', 'partial_refund']), refundAmountPaise: z.number().int().safe().min(0).max(1_000_000_000), reason: z.string().trim().min(5).max(1000) }).strict();
 
 adminRouter.get('/overview', ...adminOnly, asyncHandler(async (_req, res) => {
   const [users, sellers, products, orders, pendingApplications, pendingProducts, unpaidOrders, paymentAttempts, finance] = await Promise.all([
@@ -35,7 +46,146 @@ adminRouter.get('/overview', ...adminOnly, asyncHandler(async (_req, res) => {
     FinancialEvent.aggregate([{ $group: { _id: null, capturedPaise: { $sum: { $cond: [{ $eq: ['$kind', 'payment_captured'] }, '$amountPaise', 0] } }, platformCommissionPaise: { $sum: '$platformCommissionPaise' }, sellerSharePaise: { $sum: '$sellerSharePaise' } } }]),
   ]);
   const totals = finance[0] || { capturedPaise: 0, platformCommissionPaise: 0, sellerSharePaise: 0 };
-  res.json({ counts: { users, sellers, products, orders, pendingApplications, pendingProducts, unpaidOrders, paymentAttempts }, finance: { capturedPaise: totals.capturedPaise, platformCommissionPaise: totals.platformCommissionPaise, sellerSharePaise: totals.sellerSharePaise, commissionRateBps: 2000, sellerShareRateBps: 8000 }, paymentProvider: 'disabled' });
+  res.json({ counts: { users, sellers, products, orders, pendingApplications, pendingProducts, unpaidOrders, paymentAttempts }, finance: { capturedPaise: totals.capturedPaise, platformCommissionPaise: totals.platformCommissionPaise, sellerCommissionPaise: totals.platformCommissionPaise, sellerSharePaise: totals.sellerSharePaise, commissionRateBps: SELLER_COMMISSION_BPS, sellerShareRateBps: SELLER_SHARE_BPS, buyerMarketplaceFeePaise: BUYER_MARKETPLACE_FEE_BPS }, paymentProvider: 'disabled' });
+}));
+
+adminRouter.get('/settlement/overview', ...adminOnly, asyncHandler(async (_req, res) => {
+  const [awaitingShipment, awaitingDelivery, verified, eligible, pending, processing, paid, failed, disputed, refunded] = await Promise.all([
+    Order.countDocuments({ paymentStatus: 'paid', status: { $in: ['pending_fulfillment', 'processing'] } }),
+    Order.countDocuments({ paymentStatus: 'paid', status: 'shipped' }),
+    DeliveryVerification.countDocuments({ status: 'verified' }),
+    Payout.countDocuments({ status: 'eligible' }),
+    Payout.countDocuments({ status: { $in: ['eligible', 'blocked'] } }),
+    Payout.countDocuments({ status: 'processing' }),
+    Payout.countDocuments({ status: 'paid' }),
+    Payout.countDocuments({ status: 'failed' }),
+    Order.countDocuments({ disputeStatus: 'open' }),
+    Order.countDocuments({ paymentStatus: { $in: ['refunded', 'partially_refunded'] } }),
+  ]);
+  res.json({ counts: { awaitingShipment, awaitingDelivery, verified, eligible, pending, processing, paid, failed, disputed, refunded }, payoutProvider: 'disabled' });
+}));
+
+adminRouter.get('/payouts', ...adminOnly, asyncHandler(async (req, res) => {
+  const query = reconciliationSchema.pick({ page: true, limit: true }).parse(req.query);
+  const [payouts, total] = await Promise.all([
+    Payout.find().sort({ createdAt: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).populate('order', 'orderNumber status paymentStatus disputeStatus').populate('seller', 'name email'),
+    Payout.countDocuments(),
+  ]);
+  res.json({ payouts, page: query.page, limit: query.limit, total, provider: 'disabled' });
+}));
+
+adminRouter.get('/orders/:id/delivery', ...adminOnly, asyncHandler(async (req, res) => {
+  const id = z.string().regex(/^[a-f\d]{24}$/i).parse(req.params.id);
+  const [order, shipment, verification, acknowledgement, payout] = await Promise.all([
+    Order.findById(id).populate('buyer', 'name email').populate('seller', 'name email'),
+    Shipment.findOne({ order: id }),
+    DeliveryVerification.findOne({ order: id }),
+    BuyerDeliveryAcknowledgement.findOne({ order: id }),
+    Payout.findOne({ order: id }),
+  ]);
+  if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
+  res.json({ order, shipment: shipment ?? null, trustedVerification: verification ?? null, buyerAcknowledgement: acknowledgement ?? null, payout: payout ?? null, buyerAcknowledgementNotTrustedVerification: true });
+}));
+
+adminRouter.post('/orders/:id/delivery/verify', ...adminOnly, adminActionLimiter, asyncHandler(async (req, res) => {
+  const id = z.string().regex(/^[a-f\d]{24}$/i).parse(req.params.id);
+  const input = deliveryVerifySchema.parse(req.body);
+  const result = await inTransaction(async (session) => {
+    const order = await Order.findById(id).session(session);
+    if (!order) throw Object.assign(new Error('Order not found'), { status: 404 });
+    if (order.paymentStatus !== 'paid') throw Object.assign(new Error('Only paid orders can be delivery verified'), { status: 409 });
+    const shipment = await Shipment.findOne({ order: order._id, trackingId: input.trackingReference }).session(session);
+    if (!shipment) throw Object.assign(new Error('Tracking reference does not match the submitted shipment'), { status: 409 });
+    if (order.status === 'cancelled' || ['refunded', 'partially_refunded'].includes(order.paymentStatus) || order.disputeStatus === 'open') {
+      throw Object.assign(new Error('Cancelled, refunded or disputed orders cannot be delivery verified'), { status: 409 });
+    }
+    const verification = await DeliveryVerification.findOneAndUpdate(
+      { order: order._id },
+      { $set: { status: 'verified', source: 'admin', trackingReference: input.trackingReference, verifiedAt: new Date(), verifiedBy: req.authUser!.id, evidence: input.evidence }, $push: { auditHistory: { action: 'admin_verification', source: 'admin', actor: req.authUser!.id, trackingReference: input.trackingReference, evidence: input.evidence, at: new Date() } } },
+      { new: true, upsert: true, runValidators: true, session },
+    );
+    await Order.updateOne({ _id: order._id, paymentStatus: 'paid', status: { $ne: 'cancelled' }, disputeStatus: { $ne: 'open' } }, {
+      $set: { status: 'delivered' },
+      $push: { statusHistory: { actor: req.authUser!.id, action: 'admin_oversight', fromStatus: order.status, toStatus: 'delivered', reason: input.reason, at: new Date() } },
+    }, { session });
+    const payout = await ensurePayoutRecord(order, session);
+    return { verification, payout };
+  });
+  res.json({ verification: result.verification, payout: result.payout, payoutTriggered: false });
+}));
+
+adminRouter.post('/orders/:id/dispute', ...adminOnly, adminActionLimiter, asyncHandler(async (req, res) => {
+  const id = z.string().regex(/^[a-f\d]{24}$/i).parse(req.params.id);
+  const input = disputeSchema.parse(req.body);
+  const order = await Order.findById(id);
+  if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
+  await Order.updateOne({ _id: order._id }, {
+    $set: { disputeStatus: input.status },
+    $push: { statusHistory: { actor: req.authUser!.id, action: 'admin_oversight', fromStatus: order.status, toStatus: order.status, reason: input.reason, at: new Date() } },
+  });
+  const updated = await Order.findById(id);
+  if (updated) await ensurePayoutRecord(updated);
+  res.json({ order: updated });
+}));
+
+adminRouter.post('/orders/:id/refund-accounting', ...adminOnly, adminActionLimiter, asyncHandler(async (req, res) => {
+  const id = z.string().regex(/^[a-f\d]{24}$/i).parse(req.params.id);
+  const input = refundSchema.parse(req.body);
+  const result = await inTransaction(async (session) => {
+    const order = await Order.findById(id).session(session);
+    if (!order) throw Object.assign(new Error('Order not found'), { status: 404 });
+    if (input.refundAmountPaise > order.totalPaise) throw Object.assign(new Error('Refund amount exceeds the paid order total'), { status: 409 });
+    await Order.updateOne(
+      { _id: order._id, status: { $ne: 'cancelled' } },
+      { $set: { paymentStatus: input.kind === 'partial_refund' ? 'partially_refunded' : 'refunded' } },
+      { session },
+    );
+    const updated = await Order.findById(order._id).session(session);
+    await ensurePayoutRecord(updated ?? order, session);
+    const payout = await Payout.findOne({ order: order._id }).session(session);
+    let adjustment = null;
+    if (payout?.status === 'paid') {
+      const key = `refund-adjustment-${String(order._id)}-${input.kind}-${input.refundAmountPaise}`;
+      const recoveryNumerator = BigInt(input.refundAmountPaise) * BigInt(payout.sellerNetPaise);
+      const recoveryDenominator = BigInt(order.totalPaise);
+      const recoveryObligationPaise = recoveryDenominator > 0n
+        ? Number((recoveryNumerator + recoveryDenominator / 2n) / recoveryDenominator)
+        : 0;
+      try {
+        [adjustment] = await PayoutAdjustment.create([{
+          order: order._id,
+          payout: payout._id,
+          seller: order.seller,
+          refundAmountPaise: input.refundAmountPaise,
+          originalSellerNetPaise: payout.sellerNetPaise,
+          recoveryObligationPaise,
+          idempotencyKey: key,
+          reason: input.reason,
+          recordedBy: req.authUser!.id,
+        }], { session });
+      } catch (error) {
+        if ((error as { code?: number }).code === 11000) adjustment = await PayoutAdjustment.findOne({ idempotencyKey: `refund-adjustment-${String(order._id)}-${input.kind}-${input.refundAmountPaise}` }).session(session);
+        else throw error;
+      }
+    }
+    return { order: updated, payout, adjustment };
+  });
+  res.json({ order: result.order, payout: result.payout, adjustment: result.adjustment, provider: 'disabled', note: 'Accounting-only refund record; no provider refund or payout recovery was executed.' });
+}));
+
+adminRouter.post('/payouts/:id/retry', ...adminOnly, adminActionLimiter, asyncHandler(async (req, res) => {
+  emptyBodySchema.parse(req.body ?? {});
+  const id = z.string().regex(/^[a-f\d]{24}$/i).parse(req.params.id);
+  const payout = await Payout.findById(id);
+  if (!payout) { res.status(404).json({ error: 'Payout not found' }); return; }
+  if (payout.status !== 'failed') { res.status(409).json({ error: 'Only failed payouts may be retried safely' }); return; }
+  const order = await Order.findById(payout.order);
+  if (!order) { res.status(409).json({ error: 'Payout order is unavailable' }); return; }
+  await ensurePayoutRecord(order);
+  const safePayout = await Payout.findById(payout.id);
+  if (!safePayout || safePayout.status !== 'failed') { res.status(409).json({ error: 'Payout is no longer retryable because eligibility or refund status changed' }); return; }
+  const result = await disabledPayoutResult(payout.id);
+  res.status(503).json({ payout: result?.payout ?? payout, error: 'Payout execution is disabled; no retry was initiated', provider: 'disabled' });
 }));
 
 adminRouter.get('/users', ...adminOnly, asyncHandler(async (req, res) => {
@@ -66,7 +216,7 @@ adminRouter.get('/finance/reconciliation', ...adminOnly, asyncHandler(async (req
   const [events, total, groups] = await Promise.all([
     FinancialEvent.find(match).sort({ occurredAt: -1, _id: -1 }).skip((query.page - 1) * query.limit).limit(query.limit),
     FinancialEvent.countDocuments(match),
-    FinancialEvent.aggregate([{ $match: match }, { $group: { _id: '$kind', count: { $sum: 1 }, amountPaise: { $sum: '$amountPaise' }, platformCommissionPaise: { $sum: '$platformCommissionPaise' }, sellerSharePaise: { $sum: '$sellerSharePaise' } } }, { $sort: { _id: 1 } }]),
+    FinancialEvent.aggregate([{ $match: match }, { $group: { _id: '$kind', count: { $sum: 1 }, amountPaise: { $sum: '$amountPaise' }, sellerCommissionPaise: { $sum: { $ifNull: ['$sellerCommissionPaise', '$platformCommissionPaise'] } }, buyerMarketplaceFeePaise: { $sum: '$buyerMarketplaceFeePaise' }, platformCommissionPaise: { $sum: '$platformCommissionPaise' }, sellerSharePaise: { $sum: '$sellerSharePaise' } } }, { $sort: { _id: 1 } }]),
   ]);
   res.json({ from, to, page: query.page, limit: query.limit, total, events, totalsByKind: groups, note: 'Settlement totals include only provider-confirmed settlement events; this application does not yet ingest Cashfree Easy Split settlements.' });
 }));

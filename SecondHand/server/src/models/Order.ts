@@ -41,8 +41,11 @@ const orderSchema = new Schema({
   discountsPaise: { type: Number, required: true, min: 0, default: 0, validate: Number.isSafeInteger, immutable: true },
   taxesPaise: { type: Number, required: true, min: 0, default: 0, validate: Number.isSafeInteger, immutable: true },
   totalPaise: { type: Number, required: true, min: 0, validate: Number.isSafeInteger, immutable: true },
-  commissionRateBps: { type: Number, required: true, default: 2000, min: 0, max: 10000, validate: Number.isSafeInteger, immutable: true },
+  commissionRateBps: { type: Number, required: true, default: 500, min: 0, max: 10000, validate: Number.isSafeInteger, immutable: true },
   commissionBasisPaise: { type: Number, required: true, min: 0, validate: Number.isSafeInteger, immutable: true },
+  sellerCommissionPaise: { type: Number, min: 0, validate: Number.isSafeInteger, immutable: true },
+  buyerMarketplaceFeePaise: { type: Number, required: true, default: 0, min: 0, validate: Number.isSafeInteger, immutable: true },
+  /** Legacy snapshot field; historical values remain unchanged and new records mirror sellerCommissionPaise. */
   platformCommissionPaise: { type: Number, required: true, min: 0, validate: Number.isSafeInteger, immutable: true },
   sellerSharePaise: { type: Number, required: true, min: 0, validate: Number.isSafeInteger, immutable: true },
   deliveryAddress: { type: addressSchema, immutable: true },
@@ -52,6 +55,7 @@ const orderSchema = new Schema({
   inventoryReleasedAt: { type: Date, default: null, index: true },
   reservationReleaseReason: { type: String, enum: ['payment_expired', 'buyer_cancelled'] },
   cancelledAt: { type: Date },
+  disputeStatus: { type: String, enum: ['none', 'open', 'resolved'], default: 'none', required: true, index: true },
   statusHistory: { type: [historySchema], default: [] },
 }, { timestamps: true, versionKey: false });
 

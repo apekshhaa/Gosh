@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { app } from '../src/app.js';
 import { User } from '../src/models/User.js';
 import { SellerProfile } from '../src/models/SellerProfile.js';
@@ -66,6 +67,40 @@ describe('authentication', () => {
     expect(ok.headers['set-cookie'][0]).toContain('HttpOnly');
     expect(bad.status).toBe(401);
     expect(bad.body.error).toBe('Invalid email or password');
+  });
+
+  it('distinguishes missing and invalid login fields', async () => {
+    expect((await apiPost('/api/v1/auth/login').send({ password: 'x' })).status).toBe(400);
+    expect((await apiPost('/api/v1/auth/login').send({ email: 'valid@example.com' })).status).toBe(400);
+    expect((await apiPost('/api/v1/auth/login').send({ email: 'not-an-email', password: 'x' })).status).toBe(400);
+    expect((await apiPost('/api/v1/auth/login').send({ email: 'valid@example.com', password: 'x', unexpected: true })).status).toBe(400);
+  });
+
+  it('rejects unknown login users with a non-disclosing credential error', async () => {
+    const unknown = await apiPost('/api/v1/auth/login').send({ email: 'unknown@example.com', password: 'secure-password-123' });
+    expect(unknown.status).toBe(401);
+    expect(unknown.body.error).toBe('Invalid email or password');
+  });
+
+  it('allows login cookies for the configured frontend origin', async () => {
+    await apiPost('/api/v1/auth/register').send({ name: 'Cors User', email: 'cors@example.com', password: 'secure-password-123' });
+    const response = await request(app).post('/api/v1/auth/login').set('Origin', 'http://localhost:3000').send({ email: 'cors@example.com', password: 'secure-password-123' });
+    expect(response.status).toBe(200);
+    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+    expect(response.headers['access-control-allow-credentials']).toBe('true');
+  });
+
+  it('allows login passwords shorter than the registration minimum', async () => {
+    const user = await User.create({
+      name: 'Short Password User',
+      email: 'short-password@example.com',
+      passwordHash: await bcrypt.hash('short1', 4),
+      role: 'buyer',
+    });
+    const response = await apiPost('/api/v1/auth/login').send({ email: 'SHORT-PASSWORD@example.com', password: 'short1' });
+    expect(response.status).toBe(200);
+    expect(response.body.user).toMatchObject({ id: user.id, email: 'short-password@example.com', role: 'buyer' });
+    expect(response.headers['set-cookie'][0]).toContain('gosh_session=');
   });
 
   it('requires authentication for current user and returns the signed-in user', async () => {

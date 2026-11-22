@@ -5,13 +5,16 @@ import type { ViewState } from '../types';
 type Account = { id: string; name: string; email: string; role: 'buyer' | 'seller' | 'admin' };
 type SellerApplication = { status: 'pending' | 'approved' | 'rejected' | 'suspended'; rejectionReason?: string };
 type Listing = { _id: string; title: string; description: string; category: string; subcategory: string; brand?: string; size: string; condition: string; pricePaise: number; inventory: number; imageUrls: string[]; status: string; rejectionReason?: string };
-type SellerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; totalPaise: number; items: Array<{ title: string; quantity: number }> };
+type SellerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; itemSubtotalPaise: number; discountsPaise: number; totalPaise: number; commissionRateBps: number; commissionBasisPaise: number; sellerCommissionPaise?: number; platformCommissionPaise: number; buyerMarketplaceFeePaise?: number; sellerSharePaise: number; disputeStatus?: string; items: Array<{ title: string; quantity: number }> };
+type SellerPayout = { _id: string; status: string; productSubtotalPaise: number; commissionRateBps: number; commissionAmountPaise: number; sellerNetPaise: number; providerName: string; providerReference?: string; failureReason?: string };
 
 export default function SellerStudioView({ setView }: { setView: (view: ViewState) => void }) {
   const [account, setAccount] = useState<Account | null>(null);
   const [application, setApplication] = useState<SellerApplication | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [orders, setOrders] = useState<SellerOrder[]>([]);
+  const [payouts, setPayouts] = useState<SellerPayout[]>([]);
+  const [shipmentForm, setShipmentForm] = useState({ orderId: '', courierName: '', trackingId: '', shippedAt: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -37,12 +40,13 @@ export default function SellerStudioView({ setView }: { setView: (view: ViewStat
         setApplication(null);
       }
       if (result.user.role === 'seller') {
-        const [own, sellerOrders] = await Promise.all([apiRequest<{ products: Listing[] }>('/seller/products?limit=100'), apiRequest<{ orders: SellerOrder[] }>('/orders/seller?limit=100')]);
+        const [own, sellerOrders, payoutLedger] = await Promise.all([apiRequest<{ products: Listing[] }>('/seller/products?limit=100'), apiRequest<{ orders: SellerOrder[] }>('/orders/seller?limit=100'), apiRequest<{ payouts: SellerPayout[] }>('/orders/seller/payouts')]);
         setListings(own.products);
         setOrders(sellerOrders.orders);
-      } else { setListings([]); setOrders([]); }
+        setPayouts(payoutLedger.payouts);
+      } else { setListings([]); setOrders([]); setPayouts([]); }
     } catch (cause) {
-      if (cause instanceof ApiError && cause.status === 401) { setAccount(null); setApplication(null); setListings([]); setOrders([]); }
+      if (cause instanceof ApiError && cause.status === 401) { setAccount(null); setApplication(null); setListings([]); setOrders([]); setPayouts([]); }
       else setError(cause instanceof Error ? cause.message : 'Seller information could not be loaded.');
     } finally { setLoading(false); }
   }, []);
@@ -62,7 +66,7 @@ export default function SellerStudioView({ setView }: { setView: (view: ViewStat
 
   const signOut = async () => {
     setBusy(true);
-    try { await apiRequest('/auth/logout', { method: 'POST', body: '{}' }); setAccount(null); setApplication(null); setListings([]); setOrders([]); setMessage('You are signed out.'); }
+    try { await apiRequest('/auth/logout', { method: 'POST', body: '{}' }); setAccount(null); setApplication(null); setListings([]); setOrders([]); setPayouts([]); setMessage('You are signed out.'); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Sign out failed.'); }
     finally { setBusy(false); }
   };
@@ -133,10 +137,21 @@ export default function SellerStudioView({ setView }: { setView: (view: ViewStat
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const updateOrderStatus = async (id: string, status: 'processing' | 'shipped' | 'delivered') => {
+  const updateOrderStatus = async (id: string, status: 'processing') => {
     setBusy(true); setError('');
     try { const result = await apiRequest<{ order: SellerOrder }>(`/orders/seller/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }); setOrders((items) => items.map((item) => item._id === id ? result.order : item)); setMessage(`Order status updated to ${status}.`); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Order status could not be updated.'); }
+    finally { setBusy(false); }
+  };
+
+  const submitShipment = async (event: React.FormEvent) => {
+    event.preventDefault(); setBusy(true); setError('');
+    try {
+      await apiRequest(`/orders/seller/${shipmentForm.orderId}/shipment`, { method: 'POST', body: JSON.stringify({ courierName: shipmentForm.courierName, trackingId: shipmentForm.trackingId, shippedAt: shipmentForm.shippedAt }) });
+      setShipmentForm({ orderId: '', courierName: '', trackingId: '', shippedAt: '' });
+      setMessage('Shipment submitted. Delivery still requires independent verification; no payout was initiated.');
+      await loadAccount();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Shipment could not be submitted.'); }
     finally { setBusy(false); }
   };
 
@@ -190,7 +205,9 @@ export default function SellerStudioView({ setView }: { setView: (view: ViewStat
           <button disabled={busy} className="min-h-12 bg-luxury-charcoal px-5 text-xs font-semibold uppercase tracking-widest text-white disabled:opacity-50">{busy ? 'Submitting…' : editId ? 'Update listing' : 'Submit for review'}</button>
         </form>
         <div className="mt-10"><h2 className="font-serif text-2xl">Your listings</h2>{listings.length ? <ul className="mt-4 divide-y divide-luxury-border border-y border-luxury-border">{listings.map((listing) => <li key={listing._id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><h3 className="font-medium">{listing.title}</h3><p className="mt-1 text-xs capitalize text-luxury-gray">{listing.status.replace('_', ' ')} · ₹{(listing.pricePaise / 100).toFixed(2)} · {listing.inventory ?? 1} in stock</p>{listing.rejectionReason && <p className="mt-1 text-xs text-luxury-gray">Review note: {listing.rejectionReason}</p>}</div>{!['removed', 'sold'].includes(listing.status) && <div className="flex gap-2"><button disabled={busy} onClick={() => editListing(listing)} className="min-h-10 border border-luxury-border px-4 text-xs uppercase tracking-wider disabled:opacity-50">Edit</button><button disabled={busy} onClick={() => void archiveListing(listing._id)} className="min-h-10 border border-luxury-border px-4 text-xs uppercase tracking-wider disabled:opacity-50">Archive</button></div>}</li>)}</ul> : <p className="mt-4 text-sm text-luxury-gray">You have not submitted any listings yet.</p>}</div>
-        <div className="mt-12"><h2 className="font-serif text-2xl">Orders for your listings</h2>{orders.length ? <ul className="mt-4 divide-y divide-luxury-border border-y border-luxury-border">{orders.map((order) => { const next = order.status === 'pending_fulfillment' ? 'processing' : order.status === 'processing' ? 'shipped' : order.status === 'shipped' ? 'delivered' : null; return <li key={order._id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-mono text-xs">{order.orderNumber}</p><p className="mt-1 text-xs capitalize text-luxury-gray">{order.status.replaceAll('_', ' ')} · Payment {order.paymentStatus}</p><p className="mt-2 text-sm">{order.items.map((item) => `${item.title} × ${item.quantity}`).join(', ')} · ₹{(order.totalPaise / 100).toFixed(2)}</p></div>{next && order.paymentStatus === 'paid' && <button disabled={busy} onClick={() => void updateOrderStatus(order._id, next)} className="min-h-10 border border-luxury-border px-4 text-xs uppercase tracking-wider disabled:opacity-50">Mark {next}</button>}</li>; })}</ul> : <p className="mt-4 text-sm text-luxury-gray">No orders for your listings.</p>}</div>
+        <div className="mt-12"><h2 className="font-serif text-2xl">Shipment confirmation</h2><p className="mt-2 text-xs text-luxury-gray">Submitting shipment does not verify delivery or initiate a payout.</p><form onSubmit={submitShipment} className="mt-4 grid gap-3 border border-luxury-border p-5 sm:grid-cols-2"><label className="grid gap-2 text-xs uppercase tracking-wider text-luxury-gray">Paid order<select required value={shipmentForm.orderId} onChange={(event) => setShipmentForm({ ...shipmentForm, orderId: event.target.value })} className="min-h-11 border border-luxury-border bg-luxury-sand px-3 text-sm normal-case text-luxury-charcoal"><option value="">Select order</option>{orders.filter((order) => order.paymentStatus === 'paid' && order.status !== 'shipped' && order.status !== 'delivered' && order.status !== 'cancelled').map((order) => <option key={order._id} value={order._id}>{order.orderNumber}</option>)}</select></label><label className="grid gap-2 text-xs uppercase tracking-wider text-luxury-gray">Courier name<input required minLength={2} maxLength={100} value={shipmentForm.courierName} onChange={(event) => setShipmentForm({ ...shipmentForm, courierName: event.target.value })} className="min-h-11 border border-luxury-border bg-transparent px-3 text-sm normal-case text-luxury-charcoal" /></label><label className="grid gap-2 text-xs uppercase tracking-wider text-luxury-gray">Tracking ID<input required minLength={3} maxLength={200} value={shipmentForm.trackingId} onChange={(event) => setShipmentForm({ ...shipmentForm, trackingId: event.target.value })} className="min-h-11 border border-luxury-border bg-transparent px-3 text-sm normal-case text-luxury-charcoal" /></label><label className="grid gap-2 text-xs uppercase tracking-wider text-luxury-gray">Shipment date<input required type="datetime-local" value={shipmentForm.shippedAt} onChange={(event) => setShipmentForm({ ...shipmentForm, shippedAt: event.target.value ? new Date(event.target.value).toISOString() : '' })} className="min-h-11 border border-luxury-border bg-transparent px-3 text-sm normal-case text-luxury-charcoal" /></label><button disabled={busy} className="min-h-11 bg-luxury-charcoal px-5 text-xs uppercase tracking-widest text-white disabled:opacity-50 sm:col-span-2">Submit shipment</button></form></div>
+        <div className="mt-12"><h2 className="font-serif text-2xl">Orders for your listings</h2><p className="mt-2 text-xs text-luxury-gray">New orders use the 5% seller commission. Historical orders show their original snapshot rate.</p>{orders.length ? <ul className="mt-4 divide-y divide-luxury-border border-y border-luxury-border">{orders.map((order) => { const next = order.status === 'pending_fulfillment' ? 'processing' as const : null; const commission = order.sellerCommissionPaise ?? order.platformCommissionPaise; return <li key={order._id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-mono text-xs">{order.orderNumber}</p><p className="mt-1 text-xs capitalize text-luxury-gray">{order.status.replaceAll('_', ' ')} · Payment {order.paymentStatus}</p><p className="mt-2 text-sm">{order.items.map((item) => `${item.title} × ${item.quantity}`).join(', ')} · Total ₹{(order.totalPaise / 100).toFixed(2)}</p><p className="mt-1 text-xs text-luxury-gray">Snapshot: {order.commissionRateBps / 100}% commission (−₹{(commission / 100).toFixed(2)}); estimated seller earnings ₹{(order.sellerSharePaise / 100).toFixed(2)}. Shipping and tax excluded.</p></div>{next && order.paymentStatus === 'paid' && <button disabled={busy} onClick={() => void updateOrderStatus(order._id, next)} className="min-h-10 border border-luxury-border px-4 text-xs uppercase tracking-wider disabled:opacity-50">Mark {next}</button>}</li>; })}</ul> : <p className="mt-4 text-sm text-luxury-gray">No orders for your listings.</p>}</div>
+        <div className="mt-12"><h2 className="font-serif text-2xl">Payout ledger</h2><p className="mt-2 text-xs text-luxury-gray">Pending or blocked records are not money already transferred. Buyer acknowledgement does not make payout eligible; courier or admin trusted delivery verification is required.</p>{payouts.length ? <ul className="mt-4 divide-y divide-luxury-border border-y border-luxury-border">{payouts.map((payout) => <li key={payout._id} className="py-4"><p className="font-mono text-xs">{payout.status}</p><p className="mt-1 text-sm">Product ₹{(payout.productSubtotalPaise / 100).toFixed(2)} − 5% commission ₹{(payout.commissionAmountPaise / 100).toFixed(2)} = seller earnings ₹{(payout.sellerNetPaise / 100).toFixed(2)}</p>{payout.failureReason && <p className="mt-1 text-xs text-luxury-gray">{payout.failureReason === 'delivery_not_verified' ? 'Blocked: awaiting authenticated courier or authorized admin delivery verification.' : payout.failureReason}</p>}</li>)}</ul> : <p className="mt-4 text-sm text-luxury-gray">No payout records yet.</p>}</div>
       </>}
     </>}
   </section>;

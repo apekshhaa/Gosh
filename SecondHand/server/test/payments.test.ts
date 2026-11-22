@@ -23,16 +23,24 @@ afterAll(async () => { await mongoose.disconnect(); });
 afterEach(() => { env.CASHFREE_WEBHOOK_SECRET = undefined; });
 
 describe('payment foundation', () => {
-  it('calculates immutable 20/80 shares in paise with half-up rounding and discounts', () => {
-    expect(calculateCommission(3)).toEqual({ rateBps: 2000, eligibleSubtotalPaise: 3, platformCommissionPaise: 1, sellerSharePaise: 2 });
-    expect(calculateCommission(1001, 1)).toEqual({ rateBps: 2000, eligibleSubtotalPaise: 1000, platformCommissionPaise: 200, sellerSharePaise: 800 });
+  it('calculates 5% seller-only shares in paise with half-up rounding and discounts', () => {
+    expect(calculateCommission(100000)).toMatchObject({ rateBps: 500, eligibleSubtotalPaise: 100000, sellerCommissionPaise: 5000, sellerSharePaise: 95000, buyerMarketplaceFeePaise: 0, platformCommissionPaise: 5000 });
+    expect(calculateCommission(99900)).toMatchObject({ rateBps: 500, eligibleSubtotalPaise: 99900, sellerCommissionPaise: 4995, sellerSharePaise: 94905, buyerMarketplaceFeePaise: 0 });
+    expect(calculateCommission(10)).toMatchObject({ sellerCommissionPaise: 1, sellerSharePaise: 9, buyerMarketplaceFeePaise: 0 });
+    expect(calculateCommission(100100, 100)).toMatchObject({ eligibleSubtotalPaise: 100000, sellerCommissionPaise: 5000, sellerSharePaise: 95000, buyerMarketplaceFeePaise: 0 });
     expect(() => calculateCommission(10, 11)).toThrow(RangeError);
+  });
+
+  it('excludes shipping and taxes because they are not part of the commission basis', () => {
+    const result = calculateCommission(100000);
+    expect(result).toMatchObject({ eligibleSubtotalPaise: 100000, sellerCommissionPaise: 5000, sellerSharePaise: 95000, buyerMarketplaceFeePaise: 0 });
   });
 
   it('requires an authenticated order owner and fails closed while provider initiation is unavailable', async () => {
     const buyer = await makeBuyer('payment-owner@example.com');
     const other = await makeBuyer('payment-other@example.com');
     const order = await makeOrder(buyer.id);
+    expect(order).toMatchObject({ commissionRateBps: 2000, commissionBasisPaise: 10000, sellerCommissionPaise: 2000, platformCommissionPaise: 2000, sellerSharePaise: 8000, buyerMarketplaceFeePaise: 0 });
     const route = `/api/v1/orders/${order.id}/payment-attempts`;
     expect((await request(app).post(route).set('Origin', origin).set('Idempotency-Key', 'payment-key-0001').send({})).status).toBe(401);
     expect((await request(app).post(route).set('Origin', origin).set('Cookie', other.cookie).set('Idempotency-Key', 'payment-key-0001').send({})).status).toBe(404);
@@ -70,5 +78,5 @@ async function makeBuyer(email: string) {
 
 async function makeOrder(buyerId: string) {
   const seller = await User.create({ name: 'Payment Seller', email: `seller-${crypto.randomUUID()}@example.com`, passwordHash: await bcrypt.hash('secure-password-123', 4), role: 'seller' });
-  return Order.create({ orderNumber: `GSH-${crypto.randomBytes(6).toString('hex')}`, buyer: buyerId, seller: seller._id, idempotencyKey: `order-${crypto.randomUUID()}`, requestHash: 'test-hash', items: [{ product: new mongoose.Types.ObjectId(), title: 'Test dress', quantity: 1, unitPricePaise: 10000 }], itemSubtotalPaise: 10000, shippingPaise: 0, discountsPaise: 0, taxesPaise: 0, totalPaise: 10000, commissionRateBps: 2000, commissionBasisPaise: 10000, platformCommissionPaise: 2000, sellerSharePaise: 8000 });
+  return Order.create({ orderNumber: `GSH-${crypto.randomBytes(6).toString('hex')}`, buyer: buyerId, seller: seller._id, idempotencyKey: `order-${crypto.randomUUID()}`, requestHash: 'test-hash', items: [{ product: new mongoose.Types.ObjectId(), title: 'Historical 20% dress', quantity: 1, unitPricePaise: 10000 }], itemSubtotalPaise: 10000, shippingPaise: 0, discountsPaise: 0, taxesPaise: 0, totalPaise: 10000, commissionRateBps: 2000, commissionBasisPaise: 10000, sellerCommissionPaise: 2000, buyerMarketplaceFeePaise: 0, platformCommissionPaise: 2000, sellerSharePaise: 8000 });
 }

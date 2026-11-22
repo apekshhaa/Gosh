@@ -16,6 +16,7 @@ const envSchema = z.object({
   CASHFREE_SECRET_KEY: z.string().optional(),
   CASHFREE_WEBHOOK_SECRET: z.string().optional(),
   CASHFREE_NOTIFY_URL: z.string().url().optional(),
+  COURIER_WEBHOOK_SECRET: z.string().trim().min(32).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

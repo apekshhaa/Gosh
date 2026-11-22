@@ -9,6 +9,8 @@ const financialEventSchema = new Schema({
   seller: { type: Schema.Types.ObjectId, ref: 'User', required: true, immutable: true, index: true },
   currency: { type: String, enum: ['INR'], required: true, immutable: true },
   amountPaise: { type: Number, required: true, min: 0, validate: Number.isSafeInteger, immutable: true },
+  sellerCommissionPaise: { type: Number, min: 0, validate: Number.isSafeInteger, immutable: true },
+  buyerMarketplaceFeePaise: { type: Number, required: true, default: 0, min: 0, validate: Number.isSafeInteger, immutable: true },
   platformCommissionPaise: { type: Number, required: true, validate: Number.isSafeInteger, immutable: true },
   sellerSharePaise: { type: Number, required: true, validate: Number.isSafeInteger, immutable: true },
   providerFeePaise: { type: Number, min: 0, validate: Number.isSafeInteger, immutable: true },

@@ -14,6 +14,11 @@ import { User } from '../models/User.js';
 import { cancelUnpaidReservation, inTransaction } from '../orders/inventory.js';
 import { CashfreeSandboxProvider } from '../payments/cashfreeProvider.js';
 import { paymentProviderUnavailable } from '../payments/provider.js';
+import { Shipment } from '../models/Shipment.js';
+import { DeliveryVerification } from '../models/DeliveryVerification.js';
+import { Payout } from '../models/Payout.js';
+import { ensurePayoutRecord } from '../payouts/ledger.js';
+import { BuyerDeliveryAcknowledgement } from '../models/BuyerDeliveryAcknowledgement.js';
 
 export const ordersRouter = Router();
 const createLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-8', legacyHeaders: false, skip: () => env.NODE_ENV === 'test' });
@@ -33,8 +38,14 @@ const itemsSchema = z.object({
 }).strict();
 const idSchema = z.string().regex(/^[a-f\d]{24}$/i);
 const pageSchema = z.object({ page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(100).default(25), status: z.enum(['pending_fulfillment', 'processing', 'shipped', 'delivered']).optional() });
-const sellerStatusSchema = z.object({ status: z.enum(['processing', 'shipped', 'delivered']) }).strict();
-const adminStatusSchema = z.object({ status: z.enum(['processing', 'shipped', 'delivered']), reason: z.string().trim().min(5).max(1000) }).strict();
+const sellerStatusSchema = z.object({ status: z.enum(['processing']) }).strict();
+const adminStatusSchema = z.object({ status: z.enum(['processing']), reason: z.string().trim().min(5).max(1000) }).strict();
+const shipmentSchema = z.object({
+  courierName: z.string().trim().min(2).max(100),
+  trackingId: z.string().trim().min(3).max(200),
+  shippedAt: z.string().datetime({ offset: true }),
+}).strict();
+const buyerDeliverySchema = z.object({ trackingReference: z.string().trim().min(3).max(200) }).strict();
 // Approved sellers can also shop as buyers for listings they do not own.
 const BUYER = [requireAuth, requireRole('buyer', 'seller')];
 const SELLER = [requireAuth, requireRole('seller'), requireApprovedSeller];
@@ -79,7 +90,7 @@ ordersRouter.post('/', ...BUYER, createLimiter, asyncHandler(async (req, res) =>
       if (subtotalBig > BigInt(Number.MAX_SAFE_INTEGER)) throw Object.assign(new Error('Order total is too large'), { status: 400 });
       const subtotal = Number(subtotalBig);
       const commission = calculateCommission(subtotal);
-      const [created] = await Order.create([{ orderNumber: `GSH-${crypto.randomBytes(8).toString('hex').toUpperCase()}`, buyer: req.authUser!.id, seller: [...sellerIds][0], idempotencyKey: key, requestHash, items, ...(input.deliveryAddress ? { deliveryAddress: input.deliveryAddress } : {}), itemSubtotalPaise: subtotal, shippingPaise: 0, discountsPaise: 0, taxesPaise: 0, totalPaise: subtotal, commissionRateBps: commission.rateBps, commissionBasisPaise: commission.eligibleSubtotalPaise, platformCommissionPaise: commission.platformCommissionPaise, sellerSharePaise: commission.sellerSharePaise, paymentStatus: 'unpaid', status: 'pending_fulfillment', reservationExpiresAt: new Date(Date.now() + 20 * 60 * 1000) }], { session });
+      const [created] = await Order.create([{ orderNumber: `GSH-${crypto.randomBytes(8).toString('hex').toUpperCase()}`, buyer: req.authUser!.id, seller: [...sellerIds][0], idempotencyKey: key, requestHash, items, ...(input.deliveryAddress ? { deliveryAddress: input.deliveryAddress } : {}), itemSubtotalPaise: subtotal, shippingPaise: 0, discountsPaise: 0, taxesPaise: 0, totalPaise: subtotal, commissionRateBps: commission.rateBps, commissionBasisPaise: commission.eligibleSubtotalPaise, sellerCommissionPaise: commission.sellerCommissionPaise, buyerMarketplaceFeePaise: 0, platformCommissionPaise: commission.sellerCommissionPaise, sellerSharePaise: commission.sellerSharePaise, paymentStatus: 'unpaid', status: 'pending_fulfillment', reservationExpiresAt: new Date(Date.now() + 20 * 60 * 1000) }], { session });
       return { order: created!, replayed: false };
     });
     res.status(result.replayed ? 200 : 201).json({ order: result.order, ...(result.replayed ? { replayed: true } : {}) });
@@ -162,6 +173,13 @@ ordersRouter.get('/seller', ...SELLER, asyncHandler(async (req, res) => {
   const [orders, total] = await Promise.all([Order.find(filter).sort({ createdAt: -1 }).skip((query.page - 1) * query.limit).limit(query.limit).populate('buyer', 'name'), Order.countDocuments(filter)]);
   res.json({ orders, page: query.page, limit: query.limit, total });
 }));
+
+ordersRouter.get('/seller/payouts', ...SELLER, asyncHandler(async (req, res) => {
+  const orders = await Order.find({ seller: req.authUser!.id }).sort({ createdAt: -1 }).limit(100);
+  for (const order of orders) await ensurePayoutRecord(order);
+  const payouts = await Payout.find({ seller: req.authUser!.id }).sort({ createdAt: -1 }).limit(100).populate('order', 'orderNumber status paymentStatus');
+  res.json({ payouts, provider: 'disabled', enabled: false });
+}));
 ordersRouter.patch('/seller/:id/status', ...SELLER, asyncHandler(async (req, res) => {
   const id = idSchema.parse(req.params.id); const { status } = sellerStatusSchema.parse(req.body);
   const order = await Order.findOne({ _id: id, seller: req.authUser!.id });
@@ -172,6 +190,92 @@ ordersRouter.patch('/seller/:id/status', ...SELLER, asyncHandler(async (req, res
   const updated = await Order.findOneAndUpdate({ _id: id, seller: req.authUser!.id, status: fromStatus }, { $set: { status }, $push: { statusHistory: { actor: req.authUser!.id, action: 'seller_fulfillment', fromStatus, toStatus: status, at: new Date() } } }, { new: true, runValidators: true });
   if (!updated) { res.status(409).json({ error: 'Order status changed; reload and try again' }); return; }
   res.json({ order: updated });
+}));
+
+ordersRouter.post('/seller/:id/shipment', ...SELLER, asyncHandler(async (req, res) => {
+  const id = idSchema.parse(req.params.id);
+  const input = shipmentSchema.parse(req.body);
+  const order = await Order.findOne({ _id: id, seller: req.authUser!.id });
+  if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
+  if (order.paymentStatus !== 'paid') { res.status(409).json({ error: 'Shipment cannot be submitted before payment is confirmed' }); return; }
+  if (order.status === 'cancelled' || ['refunded', 'partially_refunded'].includes(order.paymentStatus) || order.disputeStatus === 'open') {
+    res.status(409).json({ error: 'Shipment cannot be submitted for a cancelled, refunded or disputed order' }); return;
+  }
+  if (await Shipment.exists({ order: order._id })) { res.status(409).json({ error: 'Shipment has already been submitted' }); return; }
+  const shippedAt = new Date(input.shippedAt);
+  let shipment;
+  try {
+    shipment = await Shipment.create({
+    order: order._id,
+    seller: order.seller,
+    courierName: input.courierName,
+    trackingId: input.trackingId,
+    shippedAt,
+    history: [{ actor: req.authUser!.id, courierName: input.courierName, trackingId: input.trackingId, shippedAt, recordedAt: new Date() }],
+    });
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) { res.status(409).json({ error: 'Shipment has already been submitted' }); return; }
+    throw error;
+  }
+  await Order.updateOne({ _id: order._id, seller: req.authUser!.id }, {
+    $set: { status: 'shipped' },
+    $push: { statusHistory: { actor: req.authUser!.id, action: 'seller_fulfillment', fromStatus: order.status, toStatus: 'shipped', reason: `Shipment submitted via ${input.courierName}: ${input.trackingId}`, at: new Date() } },
+  });
+  await DeliveryVerification.findOneAndUpdate(
+    { order: order._id },
+    { $setOnInsert: { order: order._id, status: 'unverified', source: 'unverified', trackingReference: input.trackingId, auditHistory: [] } },
+    { upsert: true, new: true },
+  );
+  res.status(201).json({ shipment, payoutTriggered: false });
+}));
+
+ordersRouter.post('/mine/:id/delivery-confirmation', ...BUYER, asyncHandler(async (req, res) => {
+  const id = idSchema.parse(req.params.id);
+  const input = buyerDeliverySchema.parse(req.body);
+  const order = await Order.findOne({ _id: id, buyer: req.authUser!.id });
+  if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
+  if (order.paymentStatus !== 'paid') { res.status(409).json({ error: 'Only paid orders can be delivery confirmed' }); return; }
+  if (order.status === 'cancelled' || ['refunded', 'partially_refunded'].includes(order.paymentStatus) || order.disputeStatus === 'open') {
+    res.status(409).json({ error: 'Cancelled, refunded or disputed orders cannot be delivery confirmed' }); return;
+  }
+  const shipment = await Shipment.findOne({ order: order._id, trackingId: input.trackingReference });
+  if (!shipment) { res.status(409).json({ error: 'Tracking reference does not match the submitted shipment' }); return; }
+  const result = await inTransaction(async (session) => {
+    const current = await Order.findOne({ _id: order._id, buyer: req.authUser!.id, paymentStatus: 'paid', status: { $nin: ['cancelled'] }, disputeStatus: { $ne: 'open' } }).session(session);
+    if (!current) throw Object.assign(new Error('Order is no longer eligible for delivery confirmation'), { status: 409 });
+    const currentShipment = await Shipment.findOne({ order: current._id, trackingId: input.trackingReference }).session(session);
+    if (!currentShipment) throw Object.assign(new Error('Tracking reference does not match the submitted shipment'), { status: 409 });
+    const existing = await BuyerDeliveryAcknowledgement.findOne({ order: current._id, buyer: req.authUser!.id }).session(session);
+    if (existing) return { acknowledgement: existing, duplicate: true };
+    let acknowledgement;
+    try {
+      [acknowledgement] = await BuyerDeliveryAcknowledgement.create([{
+        order: current._id,
+        buyer: req.authUser!.id,
+        trackingReference: input.trackingReference,
+        acknowledgedAt: new Date(),
+      }], { session });
+    } catch (error) {
+      if ((error as { code?: number }).code === 11000) {
+        acknowledgement = await BuyerDeliveryAcknowledgement.findOne({ order: current._id, buyer: req.authUser!.id }).session(session);
+      } else throw error;
+    }
+    await ensurePayoutRecord(current, session);
+    return { acknowledgement, duplicate: false };
+  });
+  res.status(200).json({ acknowledgement: result.acknowledgement, trustedDeliveryVerified: false, payoutEligible: false, ...(result.duplicate ? { duplicate: true } : {}) });
+}));
+
+ordersRouter.get('/mine/:id/shipment', ...BUYER, asyncHandler(async (req, res) => {
+  const id = idSchema.parse(req.params.id);
+  const order = await Order.findOne({ _id: id, buyer: req.authUser!.id }).select('_id');
+  if (!order) { res.status(404).json({ error: 'Order not found' }); return; }
+  const [shipment, verification, acknowledgement] = await Promise.all([
+    Shipment.findOne({ order: order._id }),
+    DeliveryVerification.findOne({ order: order._id }),
+    BuyerDeliveryAcknowledgement.findOne({ order: order._id, buyer: req.authUser!.id }),
+  ]);
+  res.json({ shipment: shipment ?? null, verification: verification ?? null, acknowledgement: acknowledgement ?? null, buyerAcknowledgementNotTrustedVerification: true });
 }));
 
 ordersRouter.get('/admin', ...ADMIN, asyncHandler(async (req, res) => {
@@ -197,5 +301,5 @@ ordersRouter.patch('/admin/:id/status', ...ADMIN, asyncHandler(async (req, res) 
 }));
 
 function canAdvance(from: string, to: string): boolean {
-  return (from === 'pending_fulfillment' && to === 'processing') || (from === 'processing' && to === 'shipped') || (from === 'shipped' && to === 'delivered');
+  return from === 'pending_fulfillment' && to === 'processing';
 }

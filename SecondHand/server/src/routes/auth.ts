@@ -8,8 +8,12 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireAuth, SESSION_COOKIE } from '../middleware/auth.js';
 
 export const authRouter = Router();
-const credentialsSchema = z.object({ email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()), password: z.string().min(10).max(128) });
-const registerSchema = credentialsSchema.extend({ name: z.string().trim().min(1).max(100), phone: z.string().trim().max(30).optional() });
+const loginSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address').max(254).transform((value) => value.toLowerCase()),
+  password: z.string().min(1, 'Password is required').max(128, 'Password is too long'),
+}).strict();
+const registerCredentialsSchema = z.object({ email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()), password: z.string().min(10).max(128) });
+const registerSchema = registerCredentialsSchema.extend({ name: z.string().trim().min(1).max(100), phone: z.string().trim().max(30).optional() });
 const cookieOptions = { httpOnly: true, secure: env.COOKIE_SECURE || env.NODE_ENV === 'production', sameSite: 'strict' as const, path: '/', maxAge: 7 * 24 * 60 * 60 * 1000 };
 
 function publicUser(user: { _id: unknown; name: string; email: string; role: string; emailVerified: boolean; phoneVerified: boolean; status: string }) {
@@ -31,7 +35,14 @@ authRouter.post('/register', asyncHandler(async (req, res) => {
 }));
 
 authRouter.post('/login', asyncHandler(async (req, res) => {
-  const input = credentialsSchema.parse(req.body);
+  const parsed = loginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    const field = first?.path[0];
+    res.status(400).json({ error: field === 'email' ? 'Enter a valid email address' : field === 'password' ? 'Password is required' : 'Invalid login details' });
+    return;
+  }
+  const input = parsed.data;
   const user = await User.findOne({ email: input.email }).select('+passwordHash +sessionVersion');
   if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) { res.status(401).json({ error: 'Invalid email or password' }); return; }
   if (user.status !== 'active') { res.status(403).json({ error: 'This account is unavailable' }); return; }

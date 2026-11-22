@@ -39,7 +39,7 @@ describe('orders and inventory', () => {
     const created = await post('/api/v1/orders').set('Cookie', buyer.cookie).set('Idempotency-Key', 'order-create-0001').send({ items: [{ productId: product.id, quantity: 1, selectedSize: 'M' }], deliveryAddress });
     const retry = await post('/api/v1/orders').set('Cookie', buyer.cookie).set('Idempotency-Key', 'order-create-0001').send({ items: [{ productId: product.id, quantity: 1, selectedSize: 'M' }], deliveryAddress });
     expect(created.status).toBe(201); expect(retry.status).toBe(200); expect(retry.body.replayed).toBe(true);
-    expect(created.body.order).toMatchObject({ itemSubtotalPaise: 245050, totalPaise: 245050, paymentStatus: 'unpaid', status: 'pending_fulfillment', commissionRateBps: 2000, commissionBasisPaise: 245050, platformCommissionPaise: 49010, sellerSharePaise: 196040 });
+    expect(created.body.order).toMatchObject({ itemSubtotalPaise: 245050, totalPaise: 245050, paymentStatus: 'unpaid', status: 'pending_fulfillment', commissionRateBps: 500, commissionBasisPaise: 245050, sellerCommissionPaise: 12253, platformCommissionPaise: 12253, sellerSharePaise: 232797, buyerMarketplaceFeePaise: 0 });
     expect(created.body.order.items[0]).toMatchObject({ title: listing.title, selectedSize: 'M', quantity: 1, unitPricePaise: 245050 });
     expect(created.body.order.deliveryAddress).toMatchObject(deliveryAddress);
     expect((await post('/api/v1/orders').set('Cookie', buyer.cookie).set('Idempotency-Key', 'order-create-0001').send({ items: [{ productId: product.id, quantity: 1, selectedSize: 'M' }], deliveryAddress: { ...deliveryAddress, city: 'Mumbai' } })).status).toBe(409);
@@ -88,17 +88,22 @@ describe('orders and inventory', () => {
     expect((await request(app).get('/api/v1/orders/admin').set('Cookie', buyer.cookie)).status).toBe(403);
     expect((await request(app).get('/api/v1/orders/seller').set('Cookie', other.cookie)).body.total).toBe(0);
     expect((await patch(`/api/v1/orders/seller/${orderId}/status`).set('Cookie', other.cookie).send({ status: 'processing' })).status).toBe(404);
-    expect((await patch(`/api/v1/orders/seller/${orderId}/status`).set('Cookie', seller.cookie).send({ status: 'delivered' })).status).toBe(409);
+    expect((await patch(`/api/v1/orders/seller/${orderId}/status`).set('Cookie', seller.cookie).send({ status: 'delivered' })).status).toBe(400);
     expect((await patch(`/api/v1/orders/admin/${orderId}/status`).set('Cookie', (await makeAdmin('unpaid-admin@example.com')).cookie).send({ status: 'processing', reason: 'Attempt before payment verification.' })).status).toBe(409);
     await Order.updateOne({ _id: orderId }, { $set: { paymentStatus: 'paid' } }); // Simulate verified provider confirmation for fulfillment transition tests.
     expect((await patch(`/api/v1/orders/seller/${orderId}/status`).set('Cookie', seller.cookie).send({ status: 'processing', paymentStatus: 'refunded' })).status).toBe(400);
     expect((await patch(`/api/v1/orders/seller/${orderId}/status`).set('Cookie', seller.cookie).send({ status: 'processing' })).status).toBe(200);
-    expect((await patch(`/api/v1/orders/seller/${orderId}/status`).set('Cookie', seller.cookie).send({ status: 'shipped' })).status).toBe(200);
+    expect((await post(`/api/v1/orders/seller/${orderId}/shipment`).set('Cookie', other.cookie).send({ courierName: 'Free Courier', trackingId: 'TRACK-0001', shippedAt: new Date().toISOString() })).status).toBe(404);
+    const shipment = await post(`/api/v1/orders/seller/${orderId}/shipment`).set('Cookie', seller.cookie).send({ courierName: 'Free Courier', trackingId: 'TRACK-0001', shippedAt: new Date().toISOString() });
+    expect(shipment.status).toBe(201);
+    expect(shipment.body.payoutTriggered).toBe(false);
+    expect((await post(`/api/v1/orders/mine/${orderId}/delivery-confirmation`).set('Cookie', buyer.cookie).send({ trackingReference: 'TRACK-0001' })).status).toBe(200);
     const admin = await makeAdmin('order-admin@example.com');
     expect((await request(app).get('/api/v1/orders/admin').set('Cookie', admin.cookie)).body.total).toBe(1);
-    const overseen = await patch(`/api/v1/orders/admin/${orderId}/status`).set('Cookie', admin.cookie).send({ status: 'delivered', reason: 'Delivery confirmation recorded by support.' });
-    expect(overseen.status).toBe(200); expect(overseen.body.order.statusHistory.at(-1)).toMatchObject({ action: 'admin_oversight', fromStatus: 'shipped', toStatus: 'delivered' });
-    expect(overseen.body.order.paymentStatus).toBe('paid');
+    const overseen = await patch(`/api/v1/orders/admin/${orderId}/status`).set('Cookie', admin.cookie).send({ status: 'processing', reason: 'Admin oversight.' });
+    expect(overseen.status).toBe(409);
+    expect((await request(app).get(`/api/v1/orders/mine/${orderId}/shipment`).set('Cookie', buyer.cookie)).body).toMatchObject({ verification: { status: 'unverified' }, buyerAcknowledgementNotTrustedVerification: true });
+    expect((await Order.findById(orderId))?.paymentStatus).toBe('paid');
   });
 });
 
