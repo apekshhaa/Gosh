@@ -3,7 +3,7 @@ import { InventoryTransactionUnavailable, recoverExpiredReservations } from '../
 let running = false;
 let blocked = false;
 
-export function startInventoryRecoveryWorker(intervalMs = 30_000): NodeJS.Timeout {
+export function startInventoryRecoveryWorker(intervalMs = 30_000): ReturnType<typeof setInterval> {
   const run = async () => {
     if (running || blocked) return;
     running = true;
