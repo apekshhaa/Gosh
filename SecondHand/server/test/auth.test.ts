@@ -8,18 +8,13 @@ import { app } from '../src/app.js';
 import { User } from '../src/models/User.js';
 import { SellerProfile } from '../src/models/SellerProfile.js';
 import { Product } from '../src/models/Product.js';
+import { getSessionCookieOptions } from '../src/routes/auth.js';
 
 let mongo: MongoMemoryServer;
 beforeAll(async () => {
-  const testUri = process.env.MONGODB_TEST_URI;
-  if (testUri) {
-    const databaseName = new URL(testUri).pathname.slice(1);
-    if (!databaseName.endsWith('_test')) throw new Error('MONGODB_TEST_URI must use a database name ending in _test');
-    await mongoose.connect(testUri);
-  } else {
-    mongo = await MongoMemoryServer.create();
-    await mongoose.connect(mongo.getUri());
-  }
+  mongo = await MongoMemoryServer.create();
+  await mongoose.connect(mongo.getUri());
+  await Promise.all(Object.values(mongoose.connection.collections).map((collection) => collection.deleteMany({})));
 });
 afterEach(async () => { await Promise.all(Object.values(mongoose.connection.collections).map((collection) => collection.deleteMany({}))); });
 afterAll(async () => { await mongoose.disconnect(); if (mongo) await mongo.stop(); });
@@ -67,6 +62,11 @@ describe('authentication', () => {
     expect(ok.headers['set-cookie'][0]).toContain('HttpOnly');
     expect(bad.status).toBe(401);
     expect(bad.body.error).toBe('Invalid email or password');
+  });
+
+  it('persists a production login session with SameSite=None and Secure cookies', async () => {
+    const options = getSessionCookieOptions('production', true);
+    expect(options).toMatchObject({ httpOnly: true, secure: true, sameSite: 'none', path: '/' });
   });
 
   it('distinguishes missing and invalid login fields', async () => {

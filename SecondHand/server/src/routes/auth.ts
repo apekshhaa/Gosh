@@ -14,7 +14,14 @@ const loginSchema = z.object({
 }).strict();
 const registerCredentialsSchema = z.object({ email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()), password: z.string().min(10).max(128) });
 const registerSchema = registerCredentialsSchema.extend({ name: z.string().trim().min(1).max(100), phone: z.string().trim().max(30).optional() });
-const cookieOptions = { httpOnly: true, secure: env.COOKIE_SECURE || env.NODE_ENV === 'production', sameSite: 'strict' as const, path: '/', maxAge: 7 * 24 * 60 * 60 * 1000 };
+export function getSessionCookieOptions(nodeEnv: typeof env.NODE_ENV = env.NODE_ENV, cookieSecure: boolean = env.COOKIE_SECURE) {
+  return {
+    httpOnly: true,
+    secure: cookieSecure || nodeEnv === 'production',
+    sameSite: (nodeEnv === 'production' ? 'none' : 'strict') as 'none' | 'strict',
+    path: '/',
+  };
+}
 
 function publicUser(user: { _id: unknown; name: string; email: string; role: string; emailVerified: boolean; phoneVerified: boolean; status: string }) {
   return { id: String(user._id), name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified, phoneVerified: user.phoneVerified, status: user.status };
@@ -22,7 +29,7 @@ function publicUser(user: { _id: unknown; name: string; email: string; role: str
 
 function setSession(res: Response, userId: string, sessionVersion: number) {
   const token = jwt.sign({ ver: sessionVersion }, env.JWT_SECRET, { algorithm: 'HS256', subject: userId, expiresIn: '7d' });
-  res.cookie(SESSION_COOKIE, token, cookieOptions);
+  res.cookie(SESSION_COOKIE, token, { ...getSessionCookieOptions(), maxAge: 7 * 24 * 60 * 60 * 1000 });
 }
 
 authRouter.post('/register', asyncHandler(async (req, res) => {
@@ -58,7 +65,7 @@ authRouter.post('/logout', asyncHandler(async (req, res) => {
       if (claims.ver !== undefined) await User.updateOne({ _id: claims.sub, sessionVersion: claims.ver }, { $inc: { sessionVersion: 1 } });
     } catch { /* Always clear malformed or expired browser cookies. */ }
   }
-  res.clearCookie(SESSION_COOKIE, { httpOnly: true, secure: env.COOKIE_SECURE || env.NODE_ENV === 'production', sameSite: 'strict', path: '/' });
+  res.clearCookie(SESSION_COOKIE, getSessionCookieOptions());
   res.status(204).end();
 }));
 

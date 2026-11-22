@@ -45,9 +45,11 @@ export default function SellerStudioView({ setView }: { setView: (view: ViewStat
         setOrders(sellerOrders.orders);
         setPayouts(payoutLedger.payouts);
       } else { setListings([]); setOrders([]); setPayouts([]); }
+      return true;
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 401) { setAccount(null); setApplication(null); setListings([]); setOrders([]); setPayouts([]); }
       else setError(cause instanceof Error ? cause.message : 'Seller information could not be loaded.');
+      return false;
     } finally { setLoading(false); }
   }, []);
 
@@ -58,8 +60,11 @@ export default function SellerStudioView({ setView }: { setView: (view: ViewStat
     try {
       const path = mode === 'login' ? '/auth/login' : '/auth/register';
       const body = mode === 'login' ? { email, password } : { name, email, password };
-      await apiRequest(path, { method: 'POST', body: JSON.stringify(body) });
-      await loadAccount(); setMessage('You are signed in.');
+      const result = await apiRequest<{ user: Account }>(path, { method: 'POST', body: JSON.stringify(body) });
+      setAccount(result.user);
+      const refreshed = await loadAccount();
+      if (refreshed) setMessage('You are signed in.');
+      else setMessage('');
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Sign in failed.'); }
     finally { setBusy(false); }
   };
